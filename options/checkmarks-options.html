@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <link rel="stylesheet" href="/assets/styles/checkmarks-commons.css"/>
+  <link rel="stylesheet" href="/assets/styles/checkmarks-options.css"/>
+  <link rel="stylesheet" href="/assets/styles/checkmarks-material.css"/>
+</head>
+
+<body>
+<label>
+  Request timeout in seconds:
+  <input type="number" id="request-timeout" min="1">
+</label>
+<label>
+  Number of successful sub-requests to consider a timed out bookmark okay:
+  <input type="number" id="timeout-overrule" min="1"><br>
+  <small>
+    (Some pages won't complete loading because of unresponsive external resources.)
+  </small>
+</label>
+<label>Maximum number of tabs:
+  <input type="number" id="max-tabs" min="1"><br>
+  <small>
+    (Adjust request timeout accordingly! Loading many tabs in parallel consumes a significant amount of resources.)
+  </small>
+</label>
+<label>Ignored directories contain:<br><input type="text" id="ignored-dirs"></label>
+<label>Ignored urls contain:<br><input type="text" id="ignored-urls"></label>
+<label>Show favicons of most recently loaded bookmarks: <input type="checkbox" id="show-favicons"></label>
+<label>Reformat bookmark titles to lowercase: <input type="checkbox" id="to-lowercase"></label>
+<script src="../commons/checkmarks-commons.js"></script>
+<script src="checkmarks-options.js"></script>
+</body>
+</html>

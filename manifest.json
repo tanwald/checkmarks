@@ -1,0 +1,24 @@
+{
+  "manifest_version": 2,
+  "name": "Checkmarks",
+  "description": "check bookmarks and reload favicons",
+  "version": "0.1.0",
+  "sidebar_action": {
+    "default_title": "checkmarks",
+    "default_panel": "sidebar/checkmarks-sidebar.html"
+  },
+  "options_ui": {
+    "page": "options/checkmarks-options.html",
+    "browser_style": true
+  },
+  "permissions": [
+    "webRequest",
+    "webNavigation",
+    "<all_urls>",
+    "bookmarks",
+    "tabs",
+    "storage"
+  ]
+}
+
+

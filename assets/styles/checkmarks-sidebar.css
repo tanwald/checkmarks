@@ -1,0 +1,129 @@
+/**********************************************************************************************************************
+ * CHECKMARKS SIDEBAR
+ **********************************************************************************************************************/
+
+/**********************************************************************************************************************
+ * TOP LEVEL CONTROLS/INDICATORS
+ **********************************************************************************************************************/
+#content {
+    position: relative;
+}
+
+header {
+    position: fixed;
+    z-index: 1;
+    top: 0;
+    width: 100%;
+}
+
+#controls,
+#progress {
+    position: absolute;
+    z-index: 2;
+    top: 0;
+    height: 60px;
+    line-height: 60px;
+}
+
+#controls {
+    font-size: 26px;
+    left: 20px;
+}
+
+#progress {
+    right: 20px;
+    font-weight: bold;
+}
+/**********************************************************************************************************************
+ * PROGRESS BAR
+ **********************************************************************************************************************/
+#progress-container {
+    height: 60px;
+    width: 100%;
+    border-bottom: 1px solid #A9A59F;
+    background-color: rgba(241, 242, 242, .9);
+}
+
+#progress-bar {
+    height: 100%;
+    width: 0;
+    background-color: #497EB8;
+}
+/**********************************************************************************************************************
+ * STATISTICS
+ **********************************************************************************************************************/
+#stats {
+    display: none;
+    overflow: hidden;
+    white-space: nowrap;
+    border-bottom: 1px solid #A9A59F;
+    background-color: rgba(241, 242, 242, .9);
+    text-overflow: ellipsis;
+    padding: 0 20px;
+    line-height: 40px;
+    font-size: 12px;
+}
+/**********************************************************************************************************************
+ * FAVICONS
+ **********************************************************************************************************************/
+#favicons {
+    display: none;
+    overflow: hidden;
+    white-space: nowrap;
+    height: 40px;
+    padding: 10px 0;
+    border-bottom: 1px solid #A9A59F;
+    background-color: rgba(255, 255, 255, .9);
+}
+
+.favicon {
+    height: 20px;
+    width: auto;
+    margin-right: 4px;
+}
+/**********************************************************************************************************************
+ * MODAL
+ **********************************************************************************************************************/
+#modal {
+    display: none;
+    position: fixed;
+    z-index: 3;
+    padding-top: 60px;
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 100%;
+    overflow: auto;
+    background-color: rgba(0, 0, 0, .6);
+}
+
+#modal-content {
+    width: 80%;
+    margin: auto;
+    padding: 20px;
+    border: 1px solid #A9A59F;
+    background-color: #FFF;
+    text-align: center;
+    font-size: 12px;
+}
+
+#modal-confirm,
+#modal-cancel,
+#warning {
+    font-size: 26px;
+}
+/**********************************************************************************************************************
+ * MESSAGES
+ **********************************************************************************************************************/
+#messages {
+    margin-top: 100px;
+}
+
+.message {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    padding: 0 20px;
+    line-height: 40px;
+    border-bottom: 1px solid #A9A59F;
+}

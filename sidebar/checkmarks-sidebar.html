@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <link rel="stylesheet" href="/assets/styles/checkmarks-commons.css"/>
+  <link rel="stylesheet" href="/assets/styles/checkmarks-sidebar.css"/>
+  <link rel="stylesheet" href="/assets/styles/checkmarks-material.css"/>
+</head>
+
+<body>
+<div id="modal">
+  <div id="modal-content">
+    <i id="warning" class="material-icons error">warning</i><br>
+    <b>Warning</b>
+    <p>Clicking the trash icon permanently removes the corresponding entry from your bookmarks.</p>
+    <p>After the confirmation of the first removal this warning will not appear again.</p>
+    <i id="modal-confirm" class="material-icons button">check_circle</i>
+    <i id="modal-cancel" class="material-icons button">cancel</i>
+  </div>
+</div>
+<div id="content">
+  <header>
+    <div id="controls">
+      <i id="start" class="material-icons button">play_circle_outline</i>
+      <i id="cancel" class="material-icons button">highlight_off</i>
+      <i id="options" class="material-icons button">settings</i>
+    </div>
+    <div id="progress"></div>
+    <div id="progress-container">
+      <div id="progress-bar"></div>
+    </div>
+    <div id="stats"></div>
+    <div id="favicons"></div>
+  </header>
+  <div id="messages"></div>
+</div>
+<script src="../commons/checkmarks-commons.js"></script>
+<script src="checkmarks-sidebar.js"></script>
+</body>
+</html>
