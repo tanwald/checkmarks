@@ -235,21 +235,23 @@ function RemarksSidebar() {
      */
     let walk = function (treeItem, path) {
         if (treeItem.url && treeItem.url.startsWith('http')) {
-            // Format
-            if (TO_LOWERCASE) {
-                browser.bookmarks.update(treeItem.id, {title: treeItem.title.toLowerCase()});
-            }
             if (isIgnored(treeItem.url, IGNORED_URLS) || isIgnored(path, IGNORED_DIRS)) {
                 // Bookmark or the currently processes folder is ignored.
                 // Maybe retrieve information of ignored bookmarks?
                 bookmarksIgnored.push(treeItem);
-            } else if (treeItem.url in urls) {
-                // Bookmark is duplicated.
-                reportDuplicate(treeItem);
             } else {
-                // Store urls for duplicate-check.
-                urls[treeItem.url] = true;
-                bookmarks.push(treeItem);
+                // Format
+                if (TO_LOWERCASE) {
+                    browser.bookmarks.update(treeItem.id, {title: treeItem.title.toLowerCase()});
+                }
+                if (treeItem.url in urls) {
+                    // Bookmark is duplicated.
+                    reportDuplicate(treeItem);
+                } else {
+                    // Store urls for duplicate-check.
+                    urls[treeItem.url] = true;
+                    bookmarks.push(treeItem);
+                }
             }
         } else if (typeof treeItem.children !== 'undefined') {
             // Recurse into folder even if it is ignored to get the statistics.
