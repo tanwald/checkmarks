@@ -33,6 +33,7 @@ function RemarksSidebar() {
 
     const REPORT_AUTH_ERRORS = [
         401,
+        403,
         405,
         407
     ];
@@ -81,8 +82,8 @@ function RemarksSidebar() {
     let bookmarksProcessed = 0;
     let errorCount = 0;
     let tabCount = 0;
-    let tabRegistry = {};
-    let tabRequestMap = {};
+    let tabRegistry = {}; // tabId => bookmark, tabIdcomplete => true/false
+    let tabRequestMap = {}; // tabId => requestCount, url => error
     let timeoutIds = [];
     let modalBookmarkId = -1;
     let removalConfirmed = false;
@@ -263,7 +264,7 @@ function RemarksSidebar() {
 
     /**
      * Checks if a bookmark should be ignored. Its called for checking folder and url separately.
-     * @param pathOrUrl Path to the bookmark of its url.
+     * @param pathOrUrl Path to the bookmark or its url.
      * @param ignoreArray Array of ignored paths or urls.
      * @returns {boolean}
      */
@@ -288,7 +289,7 @@ function RemarksSidebar() {
                 }, TIMEOUT));
             }, (error) => {
                 tabCount--;
-                console.log(`ERROR: Could not create tab: ${error}`);
+                console.error(`ERROR: Could not create tab: ${error}`);
             });
     };
 
@@ -298,12 +299,14 @@ function RemarksSidebar() {
      */
     let onRequestCompleted = function (details) {
         if (details.type === 'main_frame' && details.statusCode >= 400) {
+            console.log(`INFO: HTTP error: ${details.statusCode} tab: ${details.tabId} url: ${details.url}`);
+            // tabId always -1?
             if (REPORT_AUTH_ERRORS.includes(details.statusCode)) {
                 // Auth required.
-                handleError(details.tabId, ERROR_AUTH_REQUIRED);
+                tabRequestMap[details.url] = ERROR_AUTH_REQUIRED;
             } else {
                 // Most likely 404, resource not available (anymore).
-                handleError(details.tabId, ERROR_RESOURCE_NOT_FOUND);
+                tabRequestMap[details.url] = ERROR_RESOURCE_NOT_FOUND;
             }
         } else if (details.tabId in tabRegistry && details.statusCode === 200) {
             // Count successful requests during load.
@@ -317,18 +320,24 @@ function RemarksSidebar() {
     };
 
     /**
-     * Checks if a bookmark is loaded completely and removes the tab it was loaded into.
+     * Checks if a bookmark is loaded completely or produced errors and dispatches to success- and error-handler.
      * @param details Details from {browser.webRequest.onNavigationCompleted}.
      */
     let onNavigationCompleted = function (details) {
-        browser.tabs.get(details.tabId)
-            .then((tab) => {
-                const tabCompleteKey = tab.id + 'complete';
-                if (tab.status === 'complete' && !(tabCompleteKey in tabRegistry)) {
-                    tabRegistry[tabCompleteKey] = true;
-                    handleSuccess(tab);
-                }
-            });
+        if (details.url in tabRequestMap) {
+            // HTTP error detected
+            handleError(details.tabId, tabRequestMap[details.url]);
+        } else {
+            browser.tabs.get(details.tabId)
+                .then((tab) => {
+                    const tabCompleteKey = tab.id + 'complete';
+                    if (tab.status === 'complete' && !(tabCompleteKey in tabRegistry)) {
+                        // Sometimes a tab reports status complete twice?
+                        tabRegistry[tabCompleteKey] = true;
+                        handleSuccess(tab);
+                    }
+                });
+        }
     };
 
     /**
@@ -346,12 +355,12 @@ function RemarksSidebar() {
             } else {
                 // aborted
                 let bookmark = tabRegistry[details.tabId];
-                let error = errorType.replace(/_/g, ' ');
-                console.log(`WARNING: ${error} Bookmark: ${bookmark.url} Request: ${details.url}`);
+                let error = (errorType.charAt(0).toUpperCase() + errorType.slice(1)).replace(/_/g, ' ');
+                console.log(`INFO: ${error} for bookmark: ${bookmark.title} request: ${details.url}`);
             }
         } else {
             // Unknown
-            console.log(`SEVERE: ${JSON.stringify(details)}`);
+            console.error(`ERROR: ${JSON.stringify(details)}`);
         }
     };
 

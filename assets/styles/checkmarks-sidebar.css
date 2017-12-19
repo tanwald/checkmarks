@@ -121,8 +121,8 @@ header {
 
 .message {
     overflow: hidden;
-    text-overflow: ellipsis;
     white-space: nowrap;
+    text-overflow: ellipsis;
     padding: 0 20px;
     line-height: 40px;
     border-bottom: 1px solid #A9A59F;
