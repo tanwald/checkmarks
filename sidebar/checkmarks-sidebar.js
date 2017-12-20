@@ -14,51 +14,52 @@ function RemarksSidebar() {
     let TO_LOWERCASE = RE_DEFAULTS.getToLowercase();
 
     // Constants for error-mapping and tooltips.
+    // Custom error definitions:
+    const ERROR_DUPLICATE = 'duplicate';
+    const ERROR_TIMEOUT = 'timeout';
+    const ERROR_UNSPECIFIED = 'unspecified_40x/50x'; // Not yet...
+    // Request errors:
     const ERROR_RESOURCE_NOT_FOUND = 'resource_not_found';
     const ERROR_AUTH_REQUIRED = 'authentication_required';
-    const ERROR_INVALID_CERTIFICATE = 'invalid_certificate';
-    const ERROR_TIMEOUT = 'timeout';
-    const ERROR_DUPLICATE = 'duplicate';
-    const ERROR_BINDING_ABORTED = 'binding_aborted';
-    const ERROR_ABORTED = 'aborted';
-    const ERROR_CONNECTION_REFUSED = 'connection_refused';
+    // Navigation errors:
     const ERROR_SERVER_NOT_FOUND = 'server_not_found';
+    const ERROR_CONNECTION_REFUSED = 'connection_refused';
+    const ERROR_INVALID_CERTIFICATE = 'invalid_certificate';
+    const ERROR_BINDING_ABORTED = 'redirect'; // Actually a warning. Loading will continue.
+    const ERROR_ABORTED = 'aborted';
     const ERROR_INTERRUPT = 'connection_interrupted';
 
-    const REPORT_NAV_ERRORS = [
-        ERROR_INVALID_CERTIFICATE,
-        ERROR_SERVER_NOT_FOUND,
-        ERROR_CONNECTION_REFUSED
-    ];
-
-    const REPORT_AUTH_ERRORS = [
-        401,
-        403,
-        405,
-        407
-    ];
-
-    // Error codes provided by the web-extensions API.
+    // Error codes provided by the web-extensions API and some HTTP error codes.
     const ERROR_CODES_TO_TYPE = {
-        '2153394164': ERROR_INVALID_CERTIFICATE,
-        '2152398850': ERROR_BINDING_ABORTED, // redirects?
-        '2147500036': ERROR_ABORTED, // redirects?
-        '2152398861': ERROR_CONNECTION_REFUSED,
         '2152398878': ERROR_SERVER_NOT_FOUND,
-        '2152398919': ERROR_INTERRUPT
+        '2152398861': ERROR_CONNECTION_REFUSED,
+        '2153394164': ERROR_INVALID_CERTIFICATE,
+        '2152398850': ERROR_BINDING_ABORTED,
+        '2147500036': ERROR_ABORTED,
+        '2152398919': ERROR_INTERRUPT,
+        '401': ERROR_AUTH_REQUIRED,
+        '403': ERROR_AUTH_REQUIRED,
+        '404': ERROR_RESOURCE_NOT_FOUND,
+        '405': ERROR_AUTH_REQUIRED,
+        '407': ERROR_AUTH_REQUIRED
     };
 
     // Maps known error constants to material-icon-ids.
     const ERROR_TYPE_TO_ICON = {};
+    // Custom error definitions:
+    ERROR_TYPE_TO_ICON[ERROR_DUPLICATE] = 'content_copy';
+    ERROR_TYPE_TO_ICON[ERROR_TIMEOUT] = 'hourglass_full';
+    ERROR_TYPE_TO_ICON[ERROR_UNSPECIFIED] = 'warning';
+    // Request errors:
     ERROR_TYPE_TO_ICON[ERROR_RESOURCE_NOT_FOUND] = 'cloud_off';
     ERROR_TYPE_TO_ICON[ERROR_AUTH_REQUIRED] = 'security';
+    // Navigation errors:
+    ERROR_TYPE_TO_ICON[ERROR_SERVER_NOT_FOUND] = 'dns';
     ERROR_TYPE_TO_ICON[ERROR_CONNECTION_REFUSED] = 'block';
-    ERROR_TYPE_TO_ICON[ERROR_SERVER_NOT_FOUND] = 'directions';
-    ERROR_TYPE_TO_ICON[ERROR_ABORTED] = 'forward';
-    ERROR_TYPE_TO_ICON[ERROR_BINDING_ABORTED] = 'forward';
     ERROR_TYPE_TO_ICON[ERROR_INVALID_CERTIFICATE] = 'no_encryption';
-    ERROR_TYPE_TO_ICON[ERROR_TIMEOUT] = 'hourglass_full';
-    ERROR_TYPE_TO_ICON[ERROR_DUPLICATE] = 'content_copy';
+    ERROR_TYPE_TO_ICON[ERROR_BINDING_ABORTED] = 'directions';
+    ERROR_TYPE_TO_ICON[ERROR_ABORTED] = 'report';
+    ERROR_TYPE_TO_ICON[ERROR_INTERRUPT] = 'report';
 
     // DOM objects.
     const START = document.getElementById('start');
@@ -83,13 +84,13 @@ function RemarksSidebar() {
     let errorCount = 0;
     let tabCount = 0;
     let tabRegistry = {}; // tabId => bookmark, tabIdcomplete => true/false
-    let tabRequestMap = {}; // tabId => requestCount, url => error
+    let tabRequestMap = {}; // tabId => requestCount, tabUrl => error
     let timeoutIds = [];
     let modalBookmarkId = -1;
     let removalConfirmed = false;
 
     /**
-     * Registers the event-listeners for the sidebar controls.
+     * Registers the event-listeners for sidebar controls.
      */
     this.init = function () {
         // Start button that initializes the chain of events.
@@ -110,7 +111,7 @@ function RemarksSidebar() {
             cancel();
         });
 
-        // Link to Options page
+        // Link to Options page.
         OPTIONS.addEventListener('click', () => {
             browser.runtime.openOptionsPage();
         });
@@ -137,7 +138,7 @@ function RemarksSidebar() {
 
     /**
      * Restores options from local storage or sets default values.
-     * @param options Options map from local storage.
+     * @param options {{}} Options map from local storage.
      */
     let setOptions = function (options) {
         TIMEOUT = typeof options.requestTimeout !== 'undefined' ? options.requestTimeout * 1000 : TIMEOUT;
@@ -174,7 +175,7 @@ function RemarksSidebar() {
     };
 
     /**
-     * Registers listener that keep the chain of events going.
+     * Registers listeners that keep the chain of events going.
      */
     let registerListeners = function () {
         browser.tabs.onRemoved.addListener(onRemoved);
@@ -187,7 +188,7 @@ function RemarksSidebar() {
     };
 
     /**
-     * Reverts RemarksSidebar.registerListeners.
+     * Removes listeners again.
      */
     let removeListeners = function () {
         browser.tabs.onRemoved.removeListener(onRemoved);
@@ -197,7 +198,8 @@ function RemarksSidebar() {
     };
 
     /**
-     * Cancels a running bookmarks check. Events are blocked, listeners and timeouts removed and opened tabs closed.
+     * Cancels a running bookmarks-check. Events are blocked, listeners and timeouts removed, opened tabs closed
+     * and state is reset.
      */
     let cancel = function () {
         removeListeners();
@@ -213,8 +215,8 @@ function RemarksSidebar() {
     };
 
     /**
-     * Initializes the chain of events by collecting bookmark-information and fetching the first number of bookmarks
-     * depending on the maximum number of tabs.
+     * Initializes the chain of events by collecting bookmark-information and loading the first batch of bookmarks.
+     * The batch-size is dependent on the configured maximum number of tabs.
      * @param tree {browser.bookmarks.BookmarkTreeNode}
      */
     let run = function (tree) {
@@ -230,15 +232,15 @@ function RemarksSidebar() {
     };
 
     /**
-     * Recursively traverse bookmark folders.
+     * Recursively traverses bookmark-folders.
      * @param treeItem {browser.bookmarks.BookmarkTreeNode}
-     * @param path Path to the currently process bookmark folder.
+     * @param path {string} Path to the currently processed bookmark-folder.
      */
     let walk = function (treeItem, path) {
         if (treeItem.url && treeItem.url.startsWith('http')) {
             if (isIgnored(treeItem.url, IGNORED_URLS) || isIgnored(path, IGNORED_DIRS)) {
-                // Bookmark or the currently processes folder is ignored.
-                // Maybe retrieve information of ignored bookmarks?
+                // The bookmark or currently processed folder is ignored.
+                // Maybe display information about ignored bookmarks? Stored!
                 bookmarksIgnored.push(treeItem);
             } else {
                 // Format
@@ -255,7 +257,7 @@ function RemarksSidebar() {
                 }
             }
         } else if (typeof treeItem.children !== 'undefined') {
-            // Recurse into folder even if it is ignored to get the statistics.
+            // In order to get statistics recurse into the folder even if it is ignored!
             treeItem.children.forEach((child) => {
                 walk(child, path + treeItem.title + '/');
             });
@@ -265,7 +267,7 @@ function RemarksSidebar() {
     /**
      * Checks if a bookmark should be ignored. Its called for checking folder and url separately.
      * @param pathOrUrl Path to the bookmark or its url.
-     * @param ignoreArray Array of ignored paths or urls.
+     * @param ignoreArray Array of ignored (partial) paths or urls.
      * @returns {boolean}
      */
     let isIgnored = function (pathOrUrl, ignoreArray) {
@@ -289,26 +291,25 @@ function RemarksSidebar() {
                 }, TIMEOUT));
             }, (error) => {
                 tabCount--;
-                console.error(`ERROR: Could not create tab: ${error}`);
+                console.error(`ERROR: Could not create tab: ${error};`);
             });
     };
 
     /**
-     * Identifies several HTTP errors and counts successful sub-requests while loading a bookmark.
-     * @param details Details from {browser.webRequest.onCompleted}.
+     * Identifies several common HTTP errors and counts successful sub-requests while loading a bookmark.
+     * @param details {{}} Details from {browser.webRequest.onCompleted}.
      */
     let onRequestCompleted = function (details) {
         if (details.type === 'main_frame' && details.statusCode >= 400) {
-            console.log(`INFO: HTTP error: ${details.statusCode} tab: ${details.tabId} url: ${details.url}`);
-            // tabId always -1?
-            if (REPORT_AUTH_ERRORS.includes(details.statusCode)) {
-                // Auth required.
-                tabRequestMap[details.url] = ERROR_AUTH_REQUIRED;
+            if (details.statusCode in ERROR_CODES_TO_TYPE) {
+                console.warn(`WARN: HTTP error: ${details.statusCode} tab: ${details.tabId} url: ${details.url}`);
+                handleRequestError(details, ERROR_CODES_TO_TYPE[details.statusCode]);
             } else {
-                // Most likely 404, resource not available (anymore).
-                tabRequestMap[details.url] = ERROR_RESOURCE_NOT_FOUND;
+                // >= 500 or some other 40x
+                console.error(`ERROR: HTTP error: ${details.statusCode} tab: ${details.tabId} url: ${details.url}`);
+                handleRequestError(details, ERROR_UNSPECIFIED);
             }
-        } else if (details.tabId in tabRegistry && details.statusCode === 200) {
+        } else if (details.tabId in tabRegistry && details.statusCode >= 200 && details.statusCode < 300) {
             // Count successful requests during load.
             if (details.tabId in tabRequestMap) {
                 tabRequestMap[details.tabId] += 1;
@@ -320,19 +321,19 @@ function RemarksSidebar() {
     };
 
     /**
-     * Checks if a bookmark is loaded completely or produced errors and dispatches to success- and error-handler.
-     * @param details Details from {browser.webRequest.onNavigationCompleted}.
+     * Checks if a bookmark is loaded completely or has produced errors and dispatches to success- and error-handlers.
+     * @param details {{}} Details from {browser.webRequest.onCompleted}.
      */
     let onNavigationCompleted = function (details) {
         if (details.url in tabRequestMap) {
-            // HTTP error detected
+            // HTTP error detected in onRequestCompleted but tabId was -1.
             handleError(details.tabId, tabRequestMap[details.url]);
         } else {
             browser.tabs.get(details.tabId)
                 .then((tab) => {
                     const tabCompleteKey = tab.id + 'complete';
                     if (tab.status === 'complete' && !(tabCompleteKey in tabRegistry)) {
-                        // Sometimes a tab reports status complete twice?
+                        // Sometimes a tab reports "status complete" twice?
                         tabRegistry[tabCompleteKey] = true;
                         handleSuccess(tab);
                     }
@@ -341,31 +342,33 @@ function RemarksSidebar() {
     };
 
     /**
-     * Identifies several known connection errors.
-     * @param details Details from {browser.webRequest.onNavigationError}.
+     * Identifies several known navigation errors.
+     * @param details {{}} Details from {browser.webRequest.onNavigationError}.
      */
     let onNavigationError = function (details) {
         const errorCode = details.error.replace('Error code ', '');
 
         if (errorCode in ERROR_CODES_TO_TYPE) {
             let errorType = ERROR_CODES_TO_TYPE[errorCode];
+            // Capitalize and remove underline characters!
+            let errorString = (errorType.charAt(0).toUpperCase() + errorType.slice(1)).replace(/_/g, ' ');
+            let bookmark = tabRegistry[details.tabId];
 
-            if (details.frameId === 0 && REPORT_NAV_ERRORS.includes(errorType)) {
+            if (details.frameId === 0) {
+                // Main frame...
                 handleError(details.tabId, errorType);
+                console.warn(`WARN: ${errorString}; bookmark: ${bookmark.title}; request: ${details.url};`);
             } else {
-                // aborted
-                let bookmark = tabRegistry[details.tabId];
-                let error = (errorType.charAt(0).toUpperCase() + errorType.slice(1)).replace(/_/g, ' ');
-                console.log(`INFO: ${error} for bookmark: ${bookmark.title} request: ${details.url}`);
+                console.info(`INFO: ${errorString}; bookmark: ${bookmark.title}; request: ${details.url};`);
             }
         } else {
             // Unknown
-            console.error(`ERROR: ${JSON.stringify(details)}`);
+            console.error(`ERROR: Unknown navigation error: ${JSON.stringify(details)};`);
         }
     };
 
     /**
-     * After a tab is removed, ie the bookmark was successfully loaded or not, statistics and state is updated.
+     * After a tab is removed, ie the bookmark was loaded successfully or not, statistics and state are updated.
      * @param tabId Id of the removed tab.
      */
     let onRemoved = function (tabId) {
@@ -392,7 +395,7 @@ function RemarksSidebar() {
     };
 
     /**
-     * Removes a tab on timeout and decides if the bookmark is considered to be broken based on successful requests.
+     * Removes a tab on timeout and decides if the bookmark is considered to be broken, based on successful requests.
      * @param tab {tabs.Tab} that timed out.
      */
     let onTimeout = function (tab) {
@@ -404,14 +407,14 @@ function RemarksSidebar() {
                 tabRegistry[tabCompleteKey] = false;
                 let bookmark = tabRegistry[tab.id];
                 let responses = tabRequestMap[tab.id];
-                console.log(`INFO: Timeout overruled. ${responses} successful requests. Bookmark: ${bookmark.url}`);
+                console.info(`INFO: Timeout overruled; ${responses} successful requests; bookmark: ${bookmark.url};`);
                 handleSuccess(tab);
             }
         }
     };
 
     /**
-     * Removes the successfully loaded tab and displays its favicon - if any.
+     * Removes the successfully loaded tab and displays its favicon - if present.
      * @param tab {tabs.Tab} Successfully loaded tab.
      */
     let handleSuccess = function (tab) {
@@ -424,15 +427,18 @@ function RemarksSidebar() {
     };
 
     /**
-     * Initializes the chain of events that is followed by the detection of an error while loading a bookmark which
-     * includes reporting and removing.
-     * @param tabId Id of the tab where the error occured.
+     * Initializes the chain of events that is followed by errors while loading a bookmark. This includes reporting and
+     * removing the tab. On redirection "errors" the tab is not removed.
+     * @param tabId {number} Id of the tab where the error occurred.
      * @param error {string} Type of error.
      */
     let handleError = function (tabId, error) {
         let unverifiedBookmark = tabRegistry[tabId];
 
-        browser.tabs.remove(tabId);
+        // Keep on loading on redirect. The tab is likely to complete successfully.
+        if (error !== ERROR_BINDING_ABORTED) {
+            browser.tabs.remove(tabId);
+        }
 
         if (typeof unverifiedBookmark !== 'undefined') {
             errorCount++;
@@ -442,7 +448,20 @@ function RemarksSidebar() {
     };
 
     /**
-     * Appends an ui error message for a duplicated bookmark.
+     * Handles request errors where the corresponding tab id is known or unknown (-1).
+     * @param details {{}} Details from {browser.webRequest.onCompleted}.
+     * @param error {string} Type of error.
+     */
+    let handleRequestError = function (details, error) {
+        // Url-error-relation might be need by onNavigationCompleted if the tab id is -1.
+        tabRequestMap[details.url] = error;
+        if (details.tabId !== -1) {
+            handleError(details.tabId, error);
+        }
+    };
+
+    /**
+     * Appends an error message for a duplicated bookmark to the UI.
      * @param bookmark {browser.bookmarks.BookmarkTreeNode}
      */
     let reportDuplicate = function (bookmark) {
@@ -453,7 +472,7 @@ function RemarksSidebar() {
     };
 
     /**
-     * Appends an error message to the ui messages list.
+     * Appends an error message to the messages-list of the UI.
      * @param bookmark {browser.bookmarks.BookmarkTreeNode} Invalid bookmark.
      * @param error {string} Type of error.
      */
@@ -503,11 +522,11 @@ function RemarksSidebar() {
     };
 
     /**
-     * Creates an informative icon for an error type or a simple icon for an action icon.
+     * Creates tooltip icons for error types or simple icons for actions.
      * @param iconId {string} Id of the material icon.
-     * @param cssClass {string} (Optional) Additional css class
+     * @param cssClass {string} (Optional) Additional CSS class
      * @param tooltip {string} (Optional) Tooltip for the icon.
-     * @returns {*}
+     * @returns {HTMLElement}
      */
     let createIcon = function (iconId, cssClass, tooltip) {
         let icon;
@@ -542,7 +561,7 @@ function RemarksSidebar() {
     };
 
     /**
-     * Displays statistic for the scanned bookmarks (total, ignored, problems).
+     * Displays statistics for scanned bookmarks (total, ignored, problems).
      */
     let setStats = function () {
         STATS.style.display = 'block';
@@ -553,7 +572,7 @@ function RemarksSidebar() {
 
     /**
      * Displays a favicon beyond the progress bar for limited period of time.
-     * @param favIconUrl Source of the favicon
+     * @param favIconUrl {string} Source of the favicon
      */
     let setFavicon = function (favIconUrl) {
         // preload
@@ -561,7 +580,7 @@ function RemarksSidebar() {
         image.src = favIconUrl;
 
         const favIcon = document.createElement('img');
-        favIcon.src = favIconUrl;
+        favIcon.src = image.src;
         favIcon.alt = '';
         favIcon.className = 'favicon';
         favIcon.crossOrigin = 'anonymous';
@@ -571,9 +590,9 @@ function RemarksSidebar() {
     };
 
     /**
-     * Removes a bookmark from the error list or permanently from bookmarks.
-     * @param id Id of the bookmark that is to be removed.
-     * @param permanently Flag to indicate whether the bookmarks should be removed permanently.
+     * Removes a bookmark from the UI list or permanently (from the profile).
+     * @param id {string} Id of the bookmark that is to be removed.
+     * @param permanently {boolean} Flag to indicate whether the bookmark should be removed permanently.
      */
     let removeBookmark = function (id, permanently) {
         if (permanently) {
@@ -583,7 +602,9 @@ function RemarksSidebar() {
                     errorCount--;
                     setStats();
                 }, (error) => {
-                    console.log(`ERROR: Could not remove bookmark ${id}: ${error}`);
+                    // After a reported redirection another error may occur for the same bookmark which results in
+                    // two entries in the UI.
+                    console.warn(`WARNING: Could not remove bookmark ${id}: ${error}; Already removed before?`);
                 });
         } else {
             document.getElementById(id).remove();
