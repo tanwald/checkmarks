@@ -10,13 +10,46 @@
 
 <body>
 <div id="modal">
-  <div id="modal-content">
-    <i id="warning" class="material-icons error">warning</i><br>
+  <div id="modal-warning" class="modal-content">
+    <i class="material-icons modal-icon error">warning</i><br>
     <b>Warning</b>
     <p>Clicking the trash icon permanently removes the corresponding entry from your bookmarks.</p>
     <p>After the confirmation of the first removal this warning will not appear again.</p>
-    <i id="modal-confirm" class="material-icons button">check_circle</i>
-    <i id="modal-cancel" class="material-icons button">cancel</i>
+    <i id="modal-warning-confirm" class="material-icons modal-icon button">check_circle</i>
+    <i id="modal-warning-cancel" class="material-icons modal-icon button">cancel</i>
+  </div>
+  <div id="modal-help" class="modal-content">
+    <i class="material-icons modal-icon">help</i>
+    <br><br>
+    <b>Symbols</b>
+    <br><br>
+    <div class="help">
+      <i class="material-icons modal-icon">play_circle_outline</i>Start loading bookmarks<br>
+      <i class="material-icons modal-icon">highlight_off</i>Cancel (not paused)<br>
+      <i class="material-icons modal-icon">help_outline</i>Help<br>
+      <i class="material-icons modal-icon">settings</i>Options<br>
+      <i class="material-icons modal-icon">delete</i>Delete bookmark permanently<br>
+      <i class="material-icons modal-icon">check_circle</i>Remove entry from list (checked)<br>
+      <i class="material-icons modal-icon">launch</i>Launch bookmark in a new tab<br>
+    </div>
+    <br><br>
+    <b>Hints</b>
+    <br><br>
+    <div class="help">
+      <ul>
+        <li>Symbols for errors are explained in a tooltip when you hover the icon.</li>
+        <li>
+          Adjust the width of your sidebar to better see longer bookmark-titles and to avoid the disappearance of icons.
+        </li>
+        <li>
+          You can press ctrl+j to see more details about your bookmarks in the logs.
+          If you enter "checkmarks" in the search-input, only logs of this extension are displayed.
+          Adjust the log-level to your needs.
+        </li>
+      </ul>
+    </div>
+    <br>
+    <i id="modal-help-close" class="material-icons modal-icon button">check_circle</i>
   </div>
 </div>
 <div id="content">
@@ -24,6 +57,7 @@
     <div id="controls">
       <i id="start" class="material-icons button">play_circle_outline</i>
       <i id="cancel" class="material-icons button">highlight_off</i>
+      <i id="help" class="material-icons button">help_outline</i>
       <i id="options" class="material-icons button">settings</i>
     </div>
     <div id="progress"></div>

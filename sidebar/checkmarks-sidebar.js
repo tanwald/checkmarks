@@ -65,14 +65,18 @@ function RemarksSidebar() {
     const START = document.getElementById('start');
     const CANCEL = document.getElementById('cancel');
     const OPTIONS = document.getElementById('options');
+    const HELP = document.getElementById('help');
     const PROGRESS = document.getElementById('progress');
     const PROGRESS_BAR = document.getElementById('progress-bar');
     const STATS = document.getElementById('stats');
     const FAVICONS = document.getElementById('favicons');
     const MESSAGES = document.getElementById('messages');
     const MODAL = document.getElementById('modal');
-    const MODAL_CONFIRM = document.getElementById('modal-confirm');
-    const MODAL_CANCEL = document.getElementById('modal-cancel');
+    const MODAL_WARNING = document.getElementById('modal-warning');
+    const MODAL_WARNING_CONFIRM = document.getElementById('modal-warning-confirm');
+    const MODAL_WARNING_CANCEL = document.getElementById('modal-warning-cancel');
+    const MODAL_HELP = document.getElementById('modal-help');
+    const MODAL_HELP_CLOSE = document.getElementById('modal-help-close');
 
     const POST_LOAD_TIMEOUT = 2000;
 
@@ -116,16 +120,25 @@ function RemarksSidebar() {
             browser.runtime.openOptionsPage();
         });
 
+        // Open help modal.
+        HELP.addEventListener('click', () => {
+            MODAL.style.display = 'block';
+            MODAL_HELP.style.display = 'block';
+            MODAL_WARNING.style.display = 'none';
+        });
+
         // Confirmation button for the removal of bookmarks.
-        MODAL_CONFIRM.addEventListener('click', () => {
+        MODAL_WARNING_CONFIRM.addEventListener('click', () => {
             removeBookmark(modalBookmarkId, true);
             MODAL.style.display = 'none';
             removalConfirmed = true;
         });
 
-        // Hides confirmation dialog for the removal of bookmarks.
-        MODAL_CANCEL.addEventListener('click', () => {
-            MODAL.style.display = 'none';
+        // Hides modals
+        [MODAL_WARNING_CANCEL, MODAL_HELP_CLOSE].forEach((element) => {
+            element.addEventListener('click', () => {
+                MODAL.style.display = 'none';
+            });
         });
 
         // Hides confirmation dialog for the removal of bookmarks when the user clicks somewhere else.
@@ -502,6 +515,8 @@ function RemarksSidebar() {
             } else {
                 modalBookmarkId = bookmark.id;
                 MODAL.style.display = 'block';
+                MODAL_WARNING.style.display = 'block';
+                MODAL_HELP.style.display = 'none';
             }
         });
         actionContainer.append(deleteFromBookmarksIcon);

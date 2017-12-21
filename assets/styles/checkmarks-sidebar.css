@@ -97,7 +97,8 @@ header {
     background-color: rgba(0, 0, 0, .6);
 }
 
-#modal-content {
+.modal-content {
+    display: none;
     width: 80%;
     margin: auto;
     padding: 20px;
@@ -107,10 +108,23 @@ header {
     font-size: 12px;
 }
 
-#modal-confirm,
-#modal-cancel,
-#warning {
-    font-size: 26px;
+.modal-icon {
+    font-size: 26px !important;
+    vertical-align: middle;
+}
+
+.help {
+    width: 100%;
+    text-align: left;
+}
+
+.help .modal-icon {
+    margin-right: 6px;
+    font-size: 16px !important;
+}
+
+.help ul {
+    padding-left: 20px;
 }
 /**********************************************************************************************************************
  * MESSAGES
