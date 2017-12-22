@@ -322,7 +322,7 @@ function RemarksSidebar() {
      * @param details {{}} Details from {browser.webRequest.onCompleted}.
      */
     let onRequestCompleted = function (details) {
-        if (details.tabId in tabRegistry) {
+        if (details.tabId in tabRegistry || details.tabId === -1) {
             if (details.type === 'main_frame' && details.statusCode >= 400) {
                 if (details.statusCode in ERROR_CODES_TO_TYPE) {
                     console.warn(`WARN: HTTP error: ${details.statusCode} tab: ${details.tabId} url: ${details.url}`);
@@ -464,12 +464,11 @@ function RemarksSidebar() {
     let handleError = function (tabId, error) {
         let unverifiedBookmark = tabRegistry[tabId];
 
-        // Keep on loading on redirect. The tab is likely to complete successfully.
-        if (error !== ERROR_BINDING_ABORTED) {
-            browser.tabs.remove(tabId);
-        }
-
         if (typeof unverifiedBookmark !== 'undefined') {
+            // Keep on loading on redirect. The tab is likely to complete successfully.
+            if (error !== ERROR_BINDING_ABORTED) {
+                browser.tabs.remove(tabId);
+            }
             errorCount++;
             setStats();
             appendErrorMessage(unverifiedBookmark, error);
