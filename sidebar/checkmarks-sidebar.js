@@ -90,6 +90,7 @@ function RemarksSidebar() {
     let tabRegistry = {}; // tabId => bookmark, tabIdcomplete => true/false
     let tabRequestMap = {}; // tabId => requestCount, tabUrl => error
     let timeoutIds = [];
+    let hostWindowId = -1;
     let modalBookmarkId = -1;
     let removalConfirmed = false;
 
@@ -239,9 +240,17 @@ function RemarksSidebar() {
         setStats();
         registerListeners();
 
-        while (tabCount < MAX_TABS && bookmarks.length > 0) {
-            loadBookmark();
-        }
+        browser.windows.getCurrent()
+            .then((window) => {
+                // Only open tabs in the window the extension was started in.
+                hostWindowId = window.id;
+
+                while (tabCount < MAX_TABS && bookmarks.length > 0) {
+                    loadBookmark();
+                }
+            }, (error) => {
+                console.error(`ERROR: Could not get window id: ${error};`);
+            });
     };
 
     /**
@@ -296,7 +305,7 @@ function RemarksSidebar() {
     let loadBookmark = function () {
         tabCount++;
         let bookmark = bookmarks.shift();
-        browser.tabs.create({url: bookmark.url})
+        browser.tabs.create({url: bookmark.url, windowId: hostWindowId, active: false})
             .then((tab) => {
                 tabRegistry[tab.id] = bookmark;
                 timeoutIds.push(setTimeout(() => {
@@ -313,24 +322,27 @@ function RemarksSidebar() {
      * @param details {{}} Details from {browser.webRequest.onCompleted}.
      */
     let onRequestCompleted = function (details) {
-        if (details.type === 'main_frame' && details.statusCode >= 400) {
-            if (details.statusCode in ERROR_CODES_TO_TYPE) {
-                console.warn(`WARN: HTTP error: ${details.statusCode} tab: ${details.tabId} url: ${details.url}`);
-                handleRequestError(details, ERROR_CODES_TO_TYPE[details.statusCode]);
-            } else {
-                // >= 500 or some other 40x
-                console.error(`ERROR: HTTP error: ${details.statusCode} tab: ${details.tabId} url: ${details.url}`);
-                handleRequestError(details, ERROR_UNSPECIFIED);
-            }
-        } else if (details.tabId in tabRegistry && details.statusCode >= 200 && details.statusCode < 300) {
-            // Count successful requests during load.
-            if (details.tabId in tabRequestMap) {
-                tabRequestMap[details.tabId] += 1;
-            } else {
-                tabRequestMap[details.tabId] = 1;
-            }
+        if (details.tabId in tabRegistry) {
+            if (details.type === 'main_frame' && details.statusCode >= 400) {
+                if (details.statusCode in ERROR_CODES_TO_TYPE) {
+                    console.warn(`WARN: HTTP error: ${details.statusCode} tab: ${details.tabId} url: ${details.url}`);
+                    handleRequestError(details, ERROR_CODES_TO_TYPE[details.statusCode]);
+                } else {
+                    // >= 500 or some other 40x
+                    console.error(`ERROR: HTTP error: ${details.statusCode} tab: ${details.tabId} url: ${details.url}`);
+                    handleRequestError(details, ERROR_UNSPECIFIED);
+                }
+            } else if (details.statusCode >= 200 && details.statusCode < 300) {
+                // Count successful requests during load.
+                if (details.tabId in tabRequestMap) {
+                    tabRequestMap[details.tabId] += 1;
+                } else {
+                    tabRequestMap[details.tabId] = 1;
+                }
 
+            }
         }
+
     };
 
     /**
@@ -338,19 +350,21 @@ function RemarksSidebar() {
      * @param details {{}} Details from {browser.webRequest.onCompleted}.
      */
     let onNavigationCompleted = function (details) {
-        if (details.url in tabRequestMap) {
-            // HTTP error detected in onRequestCompleted but tabId was -1.
-            handleError(details.tabId, tabRequestMap[details.url]);
-        } else {
-            browser.tabs.get(details.tabId)
-                .then((tab) => {
-                    const tabCompleteKey = tab.id + 'complete';
-                    if (tab.status === 'complete' && !(tabCompleteKey in tabRegistry)) {
-                        // Sometimes a tab reports "status complete" twice?
-                        tabRegistry[tabCompleteKey] = true;
-                        handleSuccess(tab);
-                    }
-                });
+        if (details.tabId in tabRegistry) {
+            if (details.url in tabRequestMap) {
+                // HTTP error detected in onRequestCompleted but tabId was -1.
+                handleError(details.tabId, tabRequestMap[details.url]);
+            } else {
+                browser.tabs.get(details.tabId)
+                    .then((tab) => {
+                        const tabCompleteKey = tab.id + 'complete';
+                        if (tab.status === 'complete' && !(tabCompleteKey in tabRegistry)) {
+                            // Sometimes a tab reports "status complete" twice?
+                            tabRegistry[tabCompleteKey] = true;
+                            handleSuccess(tab);
+                        }
+                    });
+            }
         }
     };
 
@@ -359,24 +373,26 @@ function RemarksSidebar() {
      * @param details {{}} Details from {browser.webRequest.onNavigationError}.
      */
     let onNavigationError = function (details) {
-        const errorCode = details.error.replace('Error code ', '');
+        if (details.tabId in tabRegistry) {
+            const errorCode = details.error.replace('Error code ', '');
 
-        if (errorCode in ERROR_CODES_TO_TYPE) {
-            let errorType = ERROR_CODES_TO_TYPE[errorCode];
-            // Capitalize and remove underline characters!
-            let errorString = (errorType.charAt(0).toUpperCase() + errorType.slice(1)).replace(/_/g, ' ');
-            let bookmark = tabRegistry[details.tabId];
+            if (errorCode in ERROR_CODES_TO_TYPE) {
+                let errorType = ERROR_CODES_TO_TYPE[errorCode];
+                // Capitalize and remove underline characters!
+                let errorString = (errorType.charAt(0).toUpperCase() + errorType.slice(1)).replace(/_/g, ' ');
+                let bookmark = tabRegistry[details.tabId];
 
-            if (details.frameId === 0) {
-                // Main frame...
-                handleError(details.tabId, errorType);
-                console.warn(`WARN: ${errorString}; bookmark: ${bookmark.title}; request: ${details.url};`);
+                if (details.frameId === 0) {
+                    // Main frame...
+                    handleError(details.tabId, errorType);
+                    console.warn(`WARN: ${errorString}; bookmark: ${bookmark.title}; request: ${details.url};`);
+                } else {
+                    console.info(`INFO: ${errorString}; bookmark: ${bookmark.title}; request: ${details.url};`);
+                }
             } else {
-                console.info(`INFO: ${errorString}; bookmark: ${bookmark.title}; request: ${details.url};`);
+                // Unknown
+                console.error(`ERROR: Unknown navigation error: ${JSON.stringify(details)};`);
             }
-        } else {
-            // Unknown
-            console.error(`ERROR: Unknown navigation error: ${JSON.stringify(details)};`);
         }
     };
 
