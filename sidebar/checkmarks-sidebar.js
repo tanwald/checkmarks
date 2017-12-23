@@ -544,7 +544,23 @@ function RemarksSidebar() {
 
         const launchIcon = createIcon('launch', 'button');
         launchIcon.addEventListener('click', () => {
-            browser.tabs.create({url: bookmark.url});
+            browser.tabs.create({url: bookmark.url})
+                .then((tab) => {
+                    const saveIcon = createIcon('save', 'button');
+                    saveIcon.addEventListener('click', () => {
+                        browser.tabs.get(tab.id)
+                            .then((loadedTab) => {
+                                browser.bookmarks.update(bookmark.id, {url: loadedTab.url})
+                                    .then(() => {
+                                        console.info(`INFO: Updated ${bookmark.title} to ${loadedTab.url};`);
+                                    }, (error) => {
+                                        console.error(`ERROR: Could update ${bookmark.title}: ${error};`);
+                                    });
+                            });
+                    });
+                    launchIcon.remove();
+                    actionContainer.append(saveIcon);
+                });
         });
         actionContainer.append(launchIcon);
 
