@@ -60,6 +60,9 @@ small {
     cursor: pointer;
 }
 
+.success {
+    color: #14B500;
+}
 .error {
-    color: #DA830B;
+    color: #FB9500;
 }

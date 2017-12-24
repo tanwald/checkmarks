@@ -387,6 +387,8 @@ function RemarksSidebar() {
                     handleError(details.tabId, errorType);
                     console.warn(`WARN: ${errorString}; bookmark: ${bookmark.title}; request: ${details.url};`);
                 } else {
+                    // Sub-requests are more likely to be aborted by content-blockers.
+                    errorString = errorString.replace('Redirect', 'Aborted/redirect');
                     console.info(`INFO: ${errorString}; bookmark: ${bookmark.title}; request: ${details.url};`);
                 }
             } else {
@@ -552,9 +554,11 @@ function RemarksSidebar() {
                             .then((loadedTab) => {
                                 browser.bookmarks.update(bookmark.id, {url: loadedTab.url})
                                     .then(() => {
+                                        setTempClass(saveIcon, 'success');
                                         console.info(`INFO: Updated ${bookmark.title} to ${loadedTab.url};`);
                                     }, (error) => {
-                                        console.error(`ERROR: Could update ${bookmark.title}: ${error};`);
+                                        setTempClass(saveIcon, 'error');
+                                        console.error(`ERROR: Could not update ${bookmark.title}: ${error};`);
                                     });
                             });
                     });
@@ -565,6 +569,19 @@ function RemarksSidebar() {
         actionContainer.append(launchIcon);
 
         return actionContainer;
+    };
+
+    /**
+     * Temporarily sets the given CSS class
+     * @param element {HTMLElement} Element where the class should be set.
+     * @param cssClass {string} Name of the class to set.
+     */
+    let setTempClass = function (element, cssClass) {
+        element.classList.add(cssClass);
+
+        timeoutIds.push(setTimeout(() => {
+            element.classList.remove(cssClass);
+        }, 2000));
     };
 
     /**
