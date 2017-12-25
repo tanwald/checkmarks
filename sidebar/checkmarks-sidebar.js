@@ -271,6 +271,7 @@ function RemarksSidebar() {
                 if (TO_LOWERCASE) {
                     browser.bookmarks.update(treeItem.id, {title: treeItem.title.toLowerCase()});
                 }
+                treeItem['path'] = path.replace('//', '').toLowerCase();
                 if (treeItem.url in urls) {
                     // Bookmark is duplicated.
                     reportDuplicate(treeItem);
@@ -520,6 +521,7 @@ function RemarksSidebar() {
         messageContainer.id = bookmark.id;
         messageContainer.className = 'message';
         messageContainer.append(createActionIcons(bookmark));
+        messageContainer.append(createIcon('folder_open', '', bookmark.path));
         messageContainer.append(createIcon(ERROR_TYPE_TO_ICON[error], 'error', error.replace(/_/g, ' ')));
         messageContainer.append(document.createTextNode(bookmark.title.toLowerCase()));
 

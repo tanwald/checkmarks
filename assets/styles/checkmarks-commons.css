@@ -27,13 +27,14 @@ small {
 .tooltip-container .tooltip-text {
     position: absolute;
     z-index: 1;
+    top: 2px;
     visibility: hidden;
     opacity: 0;
     height: 22px;
     padding: 0 11px;
     border-radius: 11px;
     background-color: #4E4947;
-    font-size: 12px;
+    font-size: 10px;
     color: #FFF;
     text-align: center;
     line-height: 22px;
