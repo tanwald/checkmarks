@@ -80,6 +80,7 @@ function RemarksSidebar() {
 
     const POST_LOAD_TIMEOUT = 2000;
 
+    let startTime;
     let bookmarks = [];
     let urls = {};
     let bookmarksIgnored = [];
@@ -90,8 +91,8 @@ function RemarksSidebar() {
     let tabRegistry = {}; // tabId => bookmark, tabIdcomplete => true/false
     let tabRequestMap = {}; // tabId => requestCount, tabUrl => error
     let timeoutIds = [];
-    let hostWindowId = -1;
-    let modalBookmarkId = -1;
+    let hostWindowId;
+    let modalBookmarkId;
     let removalConfirmed = false;
 
     /**
@@ -100,6 +101,7 @@ function RemarksSidebar() {
     this.init = function () {
         // Start button that initializes the chain of events.
         START.addEventListener('click', () => {
+            startTime = Date.now();
             browser.storage.local.get()
                 .then((options) => {
 
@@ -169,7 +171,7 @@ function RemarksSidebar() {
      */
     let resetState = function () {
         PROGRESS_BAR.style.width = '0%';
-        PROGRESS.innerHTML = '';
+        PROGRESS.innerText = '';
         MESSAGES.innerHTML = '';
         MESSAGES.style.marginTop = '100px';
         STATS.style.display = 'none';
@@ -388,7 +390,7 @@ function RemarksSidebar() {
                     console.warn(`WARN: ${errorString}; bookmark: ${bookmark.title}; request: ${details.url};`);
                 } else {
                     // Sub-requests are more likely to be aborted by content-blockers.
-                    errorString = errorString.replace('Redirect', 'Aborted/redirect');
+                    errorString = errorString.replace('Redirect', 'Aborted/redirected');
                     console.info(`INFO: ${errorString}; bookmark: ${bookmark.title}; request: ${details.url};`);
                 }
             } else {
@@ -411,7 +413,7 @@ function RemarksSidebar() {
 
             let percent = Math.round(bookmarksProcessed / bookmarksToProcess * 100) + '%';
             PROGRESS_BAR.style.width = percent;
-            PROGRESS.innerHTML = percent;
+            PROGRESS.innerText = percent;
 
             if (bookmarksProcessed === bookmarksToProcess) {
                 removeListeners();
@@ -419,6 +421,13 @@ function RemarksSidebar() {
                     FAVICONS.style.display = 'none';
                     MESSAGES.style.marginTop = '100px';
                 }
+                let endTime = Date.now();
+                setTimeout(() => {
+                    // Should not take longer than 24 hours...
+                    PROGRESS.innerText = new Date(endTime - startTime)
+                        .toUTCString()
+                        .slice(17, 25)
+                }, 1000);
             } else if (bookmarks.length > 0) {
                 loadBookmark();
             }
