@@ -136,7 +136,7 @@ header {
 .message {
     overflow: hidden;
     white-space: nowrap;
-    text-overflow: ellipsis;
+    /*text-overflow: ellipsis; breaks icons...*/
     padding: 0 20px;
     line-height: 40px;
     border-bottom: 1px solid #A9A59F;
