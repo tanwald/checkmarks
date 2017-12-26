@@ -27,7 +27,8 @@ small {
 .tooltip-container .tooltip-text {
     position: absolute;
     z-index: 1;
-    top: 2px;
+    top: -22px;
+    left: 10px;
     visibility: hidden;
     opacity: 0;
     height: 22px;
@@ -51,10 +52,6 @@ small {
 .icon {
     vertical-align: bottom;
     margin-right: 6px;
-}
-
-.icon-text {
-    vertical-align: middle;
 }
 
 .button {

@@ -56,9 +56,9 @@ header {
     display: none;
     overflow: hidden;
     white-space: nowrap;
+    text-overflow: ellipsis;
     border-bottom: 1px solid #A9A59F;
     background-color: rgba(241, 242, 242, .9);
-    text-overflow: ellipsis;
     padding: 0 20px;
     line-height: 40px;
     font-size: 12px;
@@ -130,14 +130,28 @@ header {
  * MESSAGES
  **********************************************************************************************************************/
 #messages {
-    margin-top: 100px;
+    display: table;
+    overflow: hidden;
+    border-collapse: collapse;
+    width: 100%;
+    margin-top: 80px;
+}
+
+.message-container {
+    display: table-row;
+    height: 40px;
+    width: 100%;
+    white-space: nowrap;
+    border-bottom: 1px solid #A9A59F;
+}
+
+.message-container:first-of-type {
+    height: 20px;
+    border: 0;
 }
 
 .message {
-    overflow: hidden;
-    white-space: nowrap;
-    /*text-overflow: ellipsis; breaks icons...*/
+    display: table-cell;
+    vertical-align: middle;
     padding: 0 20px;
-    line-height: 40px;
-    border-bottom: 1px solid #A9A59F;
 }

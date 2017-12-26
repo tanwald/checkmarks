@@ -79,6 +79,7 @@ function RemarksSidebar() {
     const MODAL_HELP_CLOSE = document.getElementById('modal-help-close');
 
     const POST_LOAD_TIMEOUT = 2000;
+    const MIN_WINDOW_WIDTH = 220;
 
     let startTime;
     let bookmarks = [];
@@ -101,6 +102,7 @@ function RemarksSidebar() {
     this.init = function () {
         // Start button that initializes the chain of events.
         START.addEventListener('click', () => {
+            CANCEL.style.display = 'inline';
             startTime = Date.now();
             browser.storage.local.get()
                 .then((options) => {
@@ -150,6 +152,13 @@ function RemarksSidebar() {
                 MODAL.style.display = 'none';
             }
         });
+
+        // Avoid that progress/duration information overlaps controls.
+        window.addEventListener('resize', () => {
+            if (window.innerWidth < MIN_WINDOW_WIDTH) {
+                PROGRESS.innerText = '';
+            }
+        })
     };
 
     /**
@@ -173,7 +182,7 @@ function RemarksSidebar() {
         PROGRESS_BAR.style.width = '0%';
         PROGRESS.innerText = '';
         MESSAGES.innerHTML = '';
-        MESSAGES.style.marginTop = '100px';
+        MESSAGES.style.marginTop = '80px';
         STATS.style.display = 'none';
         FAVICONS.style.display = 'none';
         FAVICONS.innerHTML = '';
@@ -228,6 +237,7 @@ function RemarksSidebar() {
             }
         });
         resetState();
+        CANCEL.style.display = 'none';
     };
 
     /**
@@ -236,6 +246,12 @@ function RemarksSidebar() {
      * @param tree {browser.bookmarks.BookmarkTreeNode}
      */
     let run = function (tree) {
+        // Empty error-list row to allow tooltips above the first regular error-entry.
+        const spacer = document.createElement('div');
+        spacer.className = 'message-container';
+        MESSAGES.append(spacer);
+
+        // Collect bookmark-information
         walk(tree[0], '/');
 
         bookmarksToProcess = bookmarks.length;
@@ -414,21 +430,29 @@ function RemarksSidebar() {
 
             let percent = Math.round(bookmarksProcessed / bookmarksToProcess * 100) + '%';
             PROGRESS_BAR.style.width = percent;
-            PROGRESS.innerText = percent;
+            if (window.innerWidth > MIN_WINDOW_WIDTH) {
+                PROGRESS.innerText = percent;
+            }
 
             if (bookmarksProcessed === bookmarksToProcess) {
                 removeListeners();
+
+                CANCEL.style.display = 'none';
                 if (SHOW_FAVICONS) {
                     FAVICONS.style.display = 'none';
-                    MESSAGES.style.marginTop = '100px';
+                    MESSAGES.style.marginTop = '80px';
                 }
+
                 let endTime = Date.now();
-                setTimeout(() => {
-                    // Should not take longer than 24 hours...
-                    PROGRESS.innerText = new Date(endTime - startTime)
-                        .toUTCString()
-                        .slice(17, 25)
-                }, 1000);
+                if (window.innerWidth > MIN_WINDOW_WIDTH && endTime - startTime < 1000 * 60 * 60 * 24) {
+                    // If the sidebar is to narrow the duration would overlap the controls.
+                    // This simple ms-conversion only works for durations shorter than one day.
+                    setTimeout(() => {
+                        PROGRESS.innerText = new Date(endTime - startTime)
+                            .toUTCString()
+                            .slice(17, 25);
+                    }, POST_LOAD_TIMEOUT);
+                }
             } else if (bookmarks.length > 0) {
                 loadBookmark();
             }
@@ -519,11 +543,16 @@ function RemarksSidebar() {
     let appendErrorMessage = function (bookmark, error) {
         const messageContainer = document.createElement('div');
         messageContainer.id = bookmark.id;
-        messageContainer.className = 'message';
-        messageContainer.append(createActionIcons(bookmark));
-        messageContainer.append(createIcon('folder_open', '', bookmark.path));
-        messageContainer.append(createIcon(ERROR_TYPE_TO_ICON[error], 'error', error.replace(/_/g, ' ')));
-        messageContainer.append(document.createTextNode(bookmark.title.toLowerCase()));
+        messageContainer.className = 'message-container';
+
+        const message = document.createElement('div');
+        message.className = 'message';
+        message.append(createActionIcons(bookmark));
+        message.append(createIcon('folder_open', '', bookmark.path));
+        message.append(createIcon(ERROR_TYPE_TO_ICON[error], 'error', error.replace(/_/g, ' ')));
+        message.append(document.createTextNode(bookmark.title.toLowerCase()));
+
+        messageContainer.append(message);
 
         MESSAGES.append(messageContainer);
     };
@@ -557,7 +586,7 @@ function RemarksSidebar() {
 
         const launchIcon = createIcon('launch', 'button');
         launchIcon.addEventListener('click', () => {
-            browser.tabs.create({url: bookmark.url})
+            browser.tabs.create({url: bookmark.url, index: 1})
                 .then((tab) => {
                     const saveIcon = createIcon('save', 'button');
                     saveIcon.addEventListener('click', () => {
@@ -660,7 +689,7 @@ function RemarksSidebar() {
         favIcon.crossOrigin = 'anonymous';
         FAVICONS.prepend(favIcon);
         FAVICONS.style.display = 'block';
-        MESSAGES.style.marginTop = '140px';
+        MESSAGES.style.marginTop = '120px';
     };
 
     /**

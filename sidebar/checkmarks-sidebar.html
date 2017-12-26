@@ -24,15 +24,16 @@
     <b>Symbols</b>
     <br><br>
     <div class="help">
-      <i class="material-icons modal-icon">play_circle_outline</i>Start loading bookmarks<br>
-      <i class="material-icons modal-icon">highlight_off</i>Cancel (not paused)<br>
-      <i class="material-icons modal-icon">help_outline</i>Help<br>
-      <i class="material-icons modal-icon">settings</i>Options<br>
-      <i class="material-icons modal-icon">delete</i>Delete bookmark permanently (after confirmation)<br>
-      <i class="material-icons modal-icon">check_circle</i>Remove entry from list (checked)<br>
-      <i class="material-icons modal-icon">launch</i>Launch bookmark in a new tab<br>
-      <i class="material-icons modal-icon">folder_open</i>Display the directory-path<br>
-      <i class="material-icons modal-icon">save</i>Update the bookmark with the url of the launched tab<br>
+      <i class="material-icons modal-icon">play_circle_outline</i>Starts loading bookmarks.<br>
+      <i class="material-icons modal-icon">highlight_off</i>Cancels loading bookmarks (not paused).<br>
+      <i class="material-icons modal-icon">help_outline</i>Shows this help dialog.<br>
+      <i class="material-icons modal-icon">settings</i>Shows the options page.<br>
+      <i class="material-icons modal-icon">delete</i>Deletes bookmarks permanently (after confirmation).<br>
+      <i class="material-icons modal-icon">check_circle</i>Removes entry from list (checked).<br>
+      <i class="material-icons modal-icon">launch</i>Launches bookmark in a new tab.<br>
+      <i class="material-icons modal-icon">folder_open</i>Hover to display the directory-path!<br>
+      <i class="material-icons modal-icon">save</i>Updates the bookmark with the url of the tab you've previously opened
+      with the launch-button (see above).<br>
     </div>
     <br><br>
     <b>Hints</b>
@@ -41,7 +42,8 @@
       <ul>
         <li>Orange error-symbols are explained in a tooltip when you hover the icon.</li>
         <li>
-          Adjust the width of your sidebar to better see longer bookmark-titles and to avoid the disappearance of icons.
+          Adjust the width of your sidebar to better see longer bookmark-titles.
+          The list of errors can be scrolled horizontally.
         </li>
         <li>
           You can press ctrl+j to see more details about errors in the browser console.
@@ -59,7 +61,7 @@
   <header>
     <div id="controls">
       <i id="start" class="material-icons button">play_circle_outline</i>
-      <i id="cancel" class="material-icons button">highlight_off</i>
+      <i id="cancel" style="display: none" class="material-icons button">highlight_off</i>
       <i id="help" class="material-icons button">help_outline</i>
       <i id="options" class="material-icons button">settings</i>
     </div>
