@@ -4,73 +4,96 @@
 <head>
   <meta charset="utf-8">
   <link rel="stylesheet" href="/assets/styles/checkmarks-commons.css"/>
-  <link rel="stylesheet" href="/assets/styles/checkmarks-sidebar.css"/>
   <link rel="stylesheet" href="/assets/styles/checkmarks-material.css"/>
+  <link rel="stylesheet" href="checkmarks-sidebar.css"/>
 </head>
 
 <body>
+<!-- HEADER AND MESSAGES -->
+<div id="content">
+  <header>
+    <div id="controls">
+      <i id="start" class="material-icons button">play_circle_outline</i>
+      <i id="cancel" style="display: none" class="material-icons button">highlight_off</i>
+      <i id="help" class="material-icons button">help_outline</i>
+      <i id="options" class="material-icons button">settings</i>
+    </div>
+    <div id="progress"></div>
+    <div id="progress-container">
+      <div id="progress-bar"></div>
+    </div>
+    <div id="stats"></div>
+    <div id="favicons"></div>
+  </header>
+  <div id="messages"></div>
+</div>
+<!-- MODAL -->
 <div id="modal">
+  <!-- MODAL WARNING -->
   <div id="modal-warning" class="modal-content">
-    <i class="material-icons modal-icon error">warning</i>
+    <i class="material-icons icon error">warning</i>
     <br><br>
     <b>Warning</b>
     <br>
     <p>Clicking the trash icon permanently removes the corresponding entry from your bookmarks.</p>
     <p>After the confirmation of the first removal this warning will not appear again.</p>
     <br>
-    <i id="modal-warning-confirm" class="material-icons modal-icon button">check_circle</i>
-    <i id="modal-warning-cancel" class="material-icons modal-icon button">cancel</i>
+    <i id="modal-warning-confirm" class="material-icons icon button">check_circle</i>
+    <i id="modal-warning-cancel" class="material-icons icon button">cancel</i>
   </div>
+  <!-- MODAL HELP -->
   <div id="modal-help" class="modal-content">
-    <i class="material-icons modal-icon">help</i>
+    <i class="material-icons icon accent">help</i>
     <br><br>
+    <!-- SYMBOLS -->
     <b>Symbols</b>
     <br><br>
     <div class="help">
       <table>
         <tbody>
         <tr>
-          <td><i class="material-icons modal-icon">play_circle_outline</i></td>
+          <td><i class="material-icons icon">play_circle_outline</i></td>
           <td>Starts loading bookmarks and favicons.</td>
         </tr>
         <tr>
-          <td><i class="material-icons modal-icon">highlight_off</i></td>
-          <td>Cancels loading bookmarks and favicons (not paused).</td>
+          <td><i class="material-icons icon">highlight_off</i></td>
+          <td>Cancels loading bookmarks and favicons (not paused, only visible while loading).</td>
         </tr>
         <tr>
-          <td><i class="material-icons modal-icon">help_outline</i></td>
+          <td><i class="material-icons icon">help_outline</i></td>
           <td>Shows this help dialog.</td>
         </tr>
         <tr>
-          <td><i class="material-icons modal-icon">settings</i></td>
+          <td><i class="material-icons icon">settings</i></td>
           <td>Shows the options page.</td>
         </tr>
         <tr>
-          <td><i class="material-icons modal-icon">delete</i></td>
-          <td>Deletes bookmarks permanently (after confirmation).</td>
+          <td><i class="material-icons icon">delete</i></td>
+          <td>Deletes a bookmark permanently (after confirmation).</td>
         </tr>
         <tr>
-          <td><i class="material-icons modal-icon">check_circle</i></td>
-          <td>Removes entry from list (checked).</td>
+          <td><i class="material-icons icon">check_circle</i></td>
+          <td>Removes an entry from list (checked).</td>
         </tr>
         <tr>
-          <td><i class="material-icons modal-icon">launch</i></td>
-          <td>Launches bookmark in a new tab.</td>
+          <td><i class="material-icons icon">launch</i></td>
+          <td>Launches a bookmark in a new tab.</td>
         </tr>
         <tr>
-          <td><i class="material-icons modal-icon">folder_open</i></td>
-          <td>Hover to display the directory-path!</td>
+          <td><i class="material-icons icon">folder_open</i></td>
+          <td>Hover the icon to display the directory-path of the bookmark!</td>
         </tr>
         <tr>
-          <td><i class="material-icons modal-icon">save</i></td>
+          <td><i class="material-icons icon">save</i></td>
           <td>Updates the bookmark with the url of the tab you've previously opened
-            with the launch-button (appears after launch, see above).
+            with the launch-button <i class="material-icons icon">launch</i> (appears after launch, see above).
           </td>
         </tr>
         </tbody>
       </table>
     </div>
     <br><br>
+    <!-- HINTS -->
     <b>Hints</b>
     <br><br>
     <div class="help">
@@ -88,26 +111,7 @@
         </li>
       </ul>
     </div>
-    <br>
-    <i id="modal-help-close" class="material-icons modal-icon button">check_circle</i>
   </div>
-</div>
-<div id="content">
-  <header>
-    <div id="controls">
-      <i id="start" class="material-icons button">play_circle_outline</i>
-      <i id="cancel" style="display: none" class="material-icons button">highlight_off</i>
-      <i id="help" class="material-icons button">help_outline</i>
-      <i id="options" class="material-icons button">settings</i>
-    </div>
-    <div id="progress"></div>
-    <div id="progress-container">
-      <div id="progress-bar"></div>
-    </div>
-    <div id="stats"></div>
-    <div id="favicons"></div>
-  </header>
-  <div id="messages"></div>
 </div>
 <script src="../commons/checkmarks-commons.js"></script>
 <script src="checkmarks-sidebar.js"></script>

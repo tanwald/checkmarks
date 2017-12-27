@@ -76,10 +76,11 @@ function CheckmarksSidebar() {
     const MODAL_WARNING_CONFIRM = document.getElementById('modal-warning-confirm');
     const MODAL_WARNING_CANCEL = document.getElementById('modal-warning-cancel');
     const MODAL_HELP = document.getElementById('modal-help');
-    const MODAL_HELP_CLOSE = document.getElementById('modal-help-close');
 
     const POST_LOAD_TIMEOUT = 2000;
-    const MIN_WINDOW_WIDTH = 215; // ...to display duration/progress %
+    const MIN_WINDOW_WIDTH = 220; // ...to display duration/progress %
+    const MESSAGES_MARGIN_TOP = '80px';
+    const MESSAGES_MARGIN_TOP_FAVICON_BAR = '120px';
 
     let startTime;
     let bookmarks = [];
@@ -120,7 +121,7 @@ function CheckmarksSidebar() {
             cancel();
         });
 
-        // Link to Options page.
+        // Link to options page.
         OPTIONS.addEventListener('click', () => {
             browser.runtime.openOptionsPage();
         });
@@ -139,14 +140,12 @@ function CheckmarksSidebar() {
             removalConfirmed = true;
         });
 
-        // Hides modals
-        [MODAL_WARNING_CANCEL, MODAL_HELP_CLOSE].forEach((element) => {
-            element.addEventListener('click', () => {
-                MODAL.style.display = 'none';
-            });
+        // Hides waring modal without confirmation.
+        MODAL_WARNING_CANCEL.addEventListener('click', () => {
+            MODAL.style.display = 'none';
         });
 
-        // Hides confirmation dialog for the removal of bookmarks when the user clicks somewhere else.
+        // Hides modals when the user clicks somewhere else.
         window.addEventListener('click', (event) => {
             if (event.target === MODAL) {
                 MODAL.style.display = 'none';
@@ -182,7 +181,7 @@ function CheckmarksSidebar() {
         PROGRESS_BAR.style.width = '0%';
         PROGRESS.innerText = '';
         MESSAGES.innerHTML = '';
-        MESSAGES.style.marginTop = '80px';
+        MESSAGES.style.marginTop = MESSAGES_MARGIN_TOP;
         STATS.style.display = 'none';
         FAVICONS.style.display = 'none';
         FAVICONS.innerHTML = '';
@@ -227,17 +226,20 @@ function CheckmarksSidebar() {
      * and state is reset.
      */
     let cancel = function () {
+        CANCEL.style.display = 'none';
         removeListeners();
+
         timeoutIds.forEach((id) => {
             clearTimeout(id);
         });
+
         Object.keys(tabRegistry).forEach((id) => {
             if (!id.endsWith('complete')) {
                 browser.tabs.remove(parseInt(id));
             }
         });
+
         resetState();
-        CANCEL.style.display = 'none';
     };
 
     /**
@@ -247,9 +249,9 @@ function CheckmarksSidebar() {
      */
     let run = function (tree) {
         // Empty error-list row to allow tooltips above the first regular error-entry.
-        const spacer = document.createElement('div');
-        spacer.className = 'message-container';
-        MESSAGES.append(spacer);
+        const placeholder = document.createElement('div');
+        placeholder.className = 'message-container';
+        MESSAGES.append(placeholder);
 
         // Collect bookmark-information
         walk(tree[0], '/');
@@ -260,7 +262,7 @@ function CheckmarksSidebar() {
 
         browser.windows.getCurrent()
             .then((window) => {
-                // Open tabs only in the window the extension was started in.
+                // Open tabs only in the window the extension was started in!
                 hostWindowId = window.id;
 
                 while (tabCount < MAX_TABS && bookmarks.length > 0) {
@@ -280,7 +282,7 @@ function CheckmarksSidebar() {
         if (treeItem.url && treeItem.url.startsWith('http')) {
             if (isIgnored(treeItem.url, IGNORED_URLS) || isIgnored(path, IGNORED_DIRS)) {
                 // The bookmark or currently processed folder is ignored.
-                // Maybe display information about ignored bookmarks? Stored!
+                // Maybe display information about ignored bookmarks?
                 bookmarksIgnored.push(treeItem);
             } else {
                 // Format
@@ -307,8 +309,8 @@ function CheckmarksSidebar() {
 
     /**
      * Checks if a bookmark should be ignored. Its called for checking folder and url separately.
-     * @param pathOrUrl Path to the bookmark or its url.
-     * @param ignoreArray Array of ignored (partial) paths or urls.
+     * @param pathOrUrl {string} Path to the bookmark or its url.
+     * @param ignoreArray {string[]} Array of ignored (partial) paths or urls.
      * @returns {boolean}
      */
     let isIgnored = function (pathOrUrl, ignoreArray) {
@@ -349,21 +351,19 @@ function CheckmarksSidebar() {
                     console.warn(`WARN: HTTP error: ${details.statusCode} tab: ${details.tabId} url: ${details.url}`);
                     handleRequestError(details, ERROR_CODES_TO_TYPE[details.statusCode]);
                 } else {
-                    // >= 500 or some other 40x
+                    // >= 500 or some other 40x...
                     console.error(`ERROR: HTTP error: ${details.statusCode} tab: ${details.tabId} url: ${details.url}`);
                     handleRequestError(details, ERROR_UNSPECIFIED);
                 }
             } else if (details.statusCode >= 200 && details.statusCode < 300) {
-                // Count successful requests during load.
+                // Count successful requests while loading!
                 if (details.tabId in tabRequestMap) {
                     tabRequestMap[details.tabId] += 1;
                 } else {
                     tabRequestMap[details.tabId] = 1;
                 }
-
             }
         }
-
     };
 
     /**
@@ -421,7 +421,7 @@ function CheckmarksSidebar() {
 
     /**
      * After a tab is removed, ie the bookmark was loaded successfully or not, statistics and state are updated.
-     * @param tabId Id of the removed tab.
+     * @param tabId {number} Id of the removed tab.
      */
     let onRemoved = function (tabId) {
         if (tabId in tabRegistry) {
@@ -442,7 +442,7 @@ function CheckmarksSidebar() {
                 CANCEL.style.display = 'none';
                 if (SHOW_FAVICONS) {
                     FAVICONS.style.display = 'none';
-                    MESSAGES.style.marginTop = '80px';
+                    MESSAGES.style.marginTop = MESSAGES_MARGIN_TOP;
                 }
 
                 let endTime = Date.now();
@@ -691,7 +691,7 @@ function CheckmarksSidebar() {
         favIcon.crossOrigin = 'anonymous';
         FAVICONS.prepend(favIcon);
         FAVICONS.style.display = 'block';
-        MESSAGES.style.marginTop = '120px';
+        MESSAGES.style.marginTop = MESSAGES_MARGIN_TOP_FAVICON_BAR;
     };
 
     /**

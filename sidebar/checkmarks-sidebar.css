@@ -34,6 +34,7 @@ header {
     right: 20px;
     font-weight: bold;
 }
+
 /**********************************************************************************************************************
  * PROGRESS BAR
  **********************************************************************************************************************/
@@ -49,6 +50,7 @@ header {
     width: 0;
     background-color: #497EB8;
 }
+
 /**********************************************************************************************************************
  * STATISTICS
  **********************************************************************************************************************/
@@ -63,6 +65,7 @@ header {
     line-height: 40px;
     font-size: 12px;
 }
+
 /**********************************************************************************************************************
  * FAVICONS
  **********************************************************************************************************************/
@@ -81,6 +84,31 @@ header {
     width: auto;
     margin-right: 4px;
 }
+
+/**********************************************************************************************************************
+ * ICONS
+ **********************************************************************************************************************/
+.icon {
+    vertical-align: middle;
+    margin-right: 6px;
+}
+
+.button {
+    cursor: pointer;
+}
+
+.success {
+    color: #14B500;
+}
+
+.accent {
+    color: #497EB8;
+}
+
+.error {
+    color: #FB9500;
+}
+
 /**********************************************************************************************************************
  * MODAL
  **********************************************************************************************************************/
@@ -97,6 +125,11 @@ header {
     background-color: rgba(0, 0, 0, .6);
 }
 
+.modal-content,
+.modal-content p {
+    text-align: center;
+}
+
 .modal-content {
     display: none;
     width: 80%;
@@ -104,17 +137,12 @@ header {
     padding: 20px;
     border: 1px solid #A9A59F;
     background-color: #FFF;
-    text-align: center;
     font-size: 12px;
 }
 
-.modal-content p {
-    text-align: center;
-}
-
-.modal-icon {
+.modal-content .icon {
     font-size: 26px !important;
-    vertical-align: middle;
+    margin: 0;
 }
 
 .help {
@@ -122,14 +150,56 @@ header {
     text-align: left;
 }
 
-.help .modal-icon {
+.help .icon {
     font-size: 16px !important;
+    margin: 0;
+}
+
+.help table {
+    border-collapse: collapse;
+}
+
+.help td {
+    border: 1px solid #A9A59F;
+    padding: 2px;
 }
 
 .help ul {
     margin: 0;
     padding-left: 12px;
 }
+
+/**********************************************************************************************************************
+ * TOOLTIP
+ **********************************************************************************************************************/
+.tooltip-container {
+    position: relative;
+    display: inline-block;
+}
+
+.tooltip-container .tooltip-text {
+    position: absolute;
+    z-index: 1;
+    top: -22px;
+    left: 10px;
+    visibility: hidden;
+    opacity: 0;
+    height: 22px;
+    padding: 0 11px;
+    border-radius: 11px;
+    background-color: #4E4947;
+    font-size: 10px;
+    color: #FFF;
+    text-align: center;
+    line-height: 22px;
+    transition: opacity 1s;
+}
+
+.tooltip-container:hover .tooltip-text {
+    visibility: visible;
+    opacity: .8;
+}
+
 /**********************************************************************************************************************
  * MESSAGES
  **********************************************************************************************************************/
