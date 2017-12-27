@@ -2,7 +2,7 @@
  * Class for the options page.
  * @constructor
  */
-function RemarksOptions() {
+function CheckmarksOptions() {
 
     const requestTimeoutInput = document.getElementById('request-timeout');
     const timeoutOverruleInput = document.getElementById('timeout-overrule');
@@ -43,16 +43,16 @@ function RemarksOptions() {
     let restoreOptions = function () {
         browser.storage.local.get()
             .then((options) => {
-                requestTimeoutInput.value = options.requestTimeout || RE_DEFAULTS.getTimeout();
-                timeoutOverruleInput.value = options.timeoutOverrule || RE_DEFAULTS.getTimeoutOverrule();
-                maxTabsInput.value = options.maxTabs || RE_DEFAULTS.getMaxTabs();
-                ignoredDirsInput.value = options.ignoredDirs || RE_DEFAULTS.getIgnoredDirs();
-                ignoredUrlsInput.value = options.ignoredUrls || RE_DEFAULTS.getIgnoredUrls();
-                showFavicons.checked = options.showFavicons || RE_DEFAULTS.getShowFavicons();
-                toLowercaseInput.checked = options.toLowercase || RE_DEFAULTS.getToLowercase();
+                requestTimeoutInput.value = options.requestTimeout || CM_DEFAULTS.getTimeout();
+                timeoutOverruleInput.value = options.timeoutOverrule || CM_DEFAULTS.getTimeoutOverrule();
+                maxTabsInput.value = options.maxTabs || CM_DEFAULTS.getMaxTabs();
+                ignoredDirsInput.value = options.ignoredDirs || CM_DEFAULTS.getIgnoredDirs();
+                ignoredUrlsInput.value = options.ignoredUrls || CM_DEFAULTS.getIgnoredUrls();
+                showFavicons.checked = options.showFavicons || CM_DEFAULTS.getShowFavicons();
+                toLowercaseInput.checked = options.toLowercase || CM_DEFAULTS.getToLowercase();
             });
     };
 }
 
-const remarksOptions = new RemarksOptions();
-remarksOptions.init();
+const checkmarksOptions = new CheckmarksOptions();
+checkmarksOptions.init();

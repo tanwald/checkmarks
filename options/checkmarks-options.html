@@ -23,10 +23,16 @@
 <label>Maximum number of tabs:
   <input type="number" id="max-tabs" min="1"><br>
   <small>
-    (Adjust request timeout accordingly! Loading many tabs in parallel consumes a significant amount of resources.)
+    (Adjust request timeout accordingly! Continuously loading tabs in parallel consumes a considerable amount of
+    resources.)
   </small>
 </label>
-<label>Ignored directories contain:<br><input type="text" id="ignored-dirs"></label>
+<label>Ignored directories contain:<br>
+  <input type="text" id="ignored-dirs"><br>
+  <small>
+    (Use paths like "path/to/archive" to be more specific!)
+  </small>
+</label>
 <label>Ignored urls contain:<br><input type="text" id="ignored-urls"></label>
 <label>Show recently loaded favicons while running: <input type="checkbox" id="show-favicons"></label>
 <label>Reformat bookmark titles to lowercase: <input type="checkbox" id="to-lowercase"></label>

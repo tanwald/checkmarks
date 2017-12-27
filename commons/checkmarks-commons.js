@@ -7,7 +7,7 @@ function DefaultsStore() {
     const TIMEOUT_OVERRULE = 5;
     const MAX_TABS = 5;
     const IGNORED_DIRS = ['archive', 'local'];
-    const IGNORED_URLS = ['localhost', '192.168.1.', '10.0.0.'];
+    const IGNORED_URLS = ['localhost', '192.168.', '172.16.', '10.'];
     const SHOW_FAVICONS = true;
     const TO_LOWERCASE = false;
 
@@ -33,12 +33,12 @@ function DefaultsStore() {
 
     this.getShowFavicons = function () {
         return SHOW_FAVICONS;
-    }
+    };
 
     this.getToLowercase = function () {
         return TO_LOWERCASE;
     };
 }
 
-const RE_DEFAULTS = new DefaultsStore();
+const CM_DEFAULTS = new DefaultsStore();
 

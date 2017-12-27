@@ -2,16 +2,16 @@
  * Class for the sidebar action.
  * @constructor
  */
-function RemarksSidebar() {
+function CheckmarksSidebar() {
 
     // Default options for convenient access.
-    let TIMEOUT = RE_DEFAULTS.getTimeout() * 1000;
-    let TIMEOUT_OVERRULE = RE_DEFAULTS.getTimeoutOverrule();
-    let MAX_TABS = RE_DEFAULTS.getMaxTabs();
-    let IGNORED_DIRS = RE_DEFAULTS.getIgnoredDirs();
-    let IGNORED_URLS = RE_DEFAULTS.getIgnoredUrls();
-    let SHOW_FAVICONS = RE_DEFAULTS.getShowFavicons();
-    let TO_LOWERCASE = RE_DEFAULTS.getToLowercase();
+    let TIMEOUT = CM_DEFAULTS.getTimeout() * 1000;
+    let TIMEOUT_OVERRULE = CM_DEFAULTS.getTimeoutOverrule();
+    let MAX_TABS = CM_DEFAULTS.getMaxTabs();
+    let IGNORED_DIRS = CM_DEFAULTS.getIgnoredDirs();
+    let IGNORED_URLS = CM_DEFAULTS.getIgnoredUrls();
+    let SHOW_FAVICONS = CM_DEFAULTS.getShowFavicons();
+    let TO_LOWERCASE = CM_DEFAULTS.getToLowercase();
 
     // Constants for error-mapping and tooltips.
     // Custom error definitions:
@@ -79,7 +79,7 @@ function RemarksSidebar() {
     const MODAL_HELP_CLOSE = document.getElementById('modal-help-close');
 
     const POST_LOAD_TIMEOUT = 2000;
-    const MIN_WINDOW_WIDTH = 220;
+    const MIN_WINDOW_WIDTH = 210; // ...to display duration/progress %
 
     let startTime;
     let bookmarks = [];
@@ -260,7 +260,7 @@ function RemarksSidebar() {
 
         browser.windows.getCurrent()
             .then((window) => {
-                // Only open tabs in the window the extension was started in.
+                // Open tabs only in the window the extension was started in.
                 hostWindowId = window.id;
 
                 while (tabCount < MAX_TABS && bookmarks.length > 0) {
@@ -324,9 +324,11 @@ function RemarksSidebar() {
     let loadBookmark = function () {
         tabCount++;
         let bookmark = bookmarks.shift();
+
         browser.tabs.create({url: bookmark.url, windowId: hostWindowId, active: false})
             .then((tab) => {
                 tabRegistry[tab.id] = bookmark;
+
                 timeoutIds.push(setTimeout(() => {
                     onTimeout(tab);
                 }, TIMEOUT));
@@ -729,5 +731,5 @@ function RemarksSidebar() {
     };
 }
 
-const remarksSidebar = new RemarksSidebar();
-remarksSidebar.init();
+const checkmarksSidebar = new CheckmarksSidebar();
+checkmarksSidebar.init();

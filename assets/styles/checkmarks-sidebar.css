@@ -108,6 +108,10 @@ header {
     font-size: 12px;
 }
 
+.modal-content p {
+    text-align: center;
+}
+
 .modal-icon {
     font-size: 26px !important;
     vertical-align: middle;
@@ -119,12 +123,12 @@ header {
 }
 
 .help .modal-icon {
-    margin-right: 6px;
     font-size: 16px !important;
 }
 
 .help ul {
-    padding-left: 20px;
+    margin: 0;
+    padding-left: 12px;
 }
 /**********************************************************************************************************************
  * MESSAGES
