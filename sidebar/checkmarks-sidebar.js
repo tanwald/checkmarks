@@ -79,7 +79,7 @@ function CheckmarksSidebar() {
     const MODAL_HELP_CLOSE = document.getElementById('modal-help-close');
 
     const POST_LOAD_TIMEOUT = 2000;
-    const MIN_WINDOW_WIDTH = 210; // ...to display duration/progress %
+    const MIN_WINDOW_WIDTH = 215; // ...to display duration/progress %
 
     let startTime;
     let bookmarks = [];
@@ -287,7 +287,7 @@ function CheckmarksSidebar() {
                 if (TO_LOWERCASE) {
                     browser.bookmarks.update(treeItem.id, {title: treeItem.title.toLowerCase()});
                 }
-                treeItem['path'] = path.replace('//', '').toLowerCase();
+                treeItem['path'] = path.replace(/(^\/\/|\/$)/g, '').toLowerCase();
                 if (treeItem.url in urls) {
                     // Bookmark is duplicated.
                     reportDuplicate(treeItem);
