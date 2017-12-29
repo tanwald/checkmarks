@@ -2,7 +2,7 @@
   "manifest_version": 2,
   "name": "Checkmarks",
   "description": "Check bookmarks and reload favicons!",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "icons": {
     "48": "assets/images/icons/checkmarks-logo.svg",
     "96": "assets/images/icons/checkmarks-logo.svg"
