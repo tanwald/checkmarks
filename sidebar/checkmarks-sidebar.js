@@ -9,7 +9,11 @@ function CheckmarksSidebar() {
     let TIMEOUT_OVERRULE = CM_DEFAULTS.getTimeoutOverrule();
     let MAX_TABS = CM_DEFAULTS.getMaxTabs();
     let IGNORED_DIRS = CM_DEFAULTS.getIgnoredDirs();
+    let IGNORED_DIRS_ACTIVE = CM_DEFAULTS.getIgnoredDirsActive();
+    let INCLUDED_DIRS = CM_DEFAULTS.getIncludedDirs();
+    let INCLUDED_DIRS_ACTIVE = CM_DEFAULTS.getIncludedDirsActive();
     let IGNORED_URLS = CM_DEFAULTS.getIgnoredUrls();
+    let IGNORED_URLS_ACTIVE = CM_DEFAULTS.getIgnoredUrlsActive();
     let SHOW_FAVICONS = CM_DEFAULTS.getShowFavicons();
     let TO_LOWERCASE = CM_DEFAULTS.getToLowercase();
 
@@ -168,8 +172,18 @@ function CheckmarksSidebar() {
         TIMEOUT = typeof options.requestTimeout !== 'undefined' ? options.requestTimeout * 1000 : TIMEOUT;
         TIMEOUT_OVERRULE = typeof options.timeoutOverrule !== 'undefined' ? options.timeoutOverrule : TIMEOUT_OVERRULE;
         MAX_TABS = typeof options.maxTabs !== 'undefined' ? options.maxTabs : MAX_TABS;
-        IGNORED_DIRS = typeof options.ignoredDirs !== 'undefined' ? getOptionsArray(options.ignoredDirs) : IGNORED_DIRS;
-        IGNORED_URLS = typeof options.ignoredUrls !== 'undefined' ? getOptionsArray(options.ignoredUrls) : IGNORED_URLS;
+        IGNORED_DIRS = typeof options.ignoredDirs !== 'undefined' ?
+            getOptionsArray(options.ignoredDirs) : IGNORED_DIRS;
+        IGNORED_DIRS_ACTIVE = typeof options.ignoredDirsActive !== 'undefined' ?
+            options.ignoredDirsActive : IGNORED_DIRS_ACTIVE;
+        INCLUDED_DIRS = typeof options.includedDirs !== 'undefined' ?
+            getOptionsArray(options.includedDirs) : INCLUDED_DIRS;
+        INCLUDED_DIRS_ACTIVE = typeof options.includedDirsActive !== 'undefined' ?
+            options.includedDirsActive : INCLUDED_DIRS_ACTIVE;
+        IGNORED_URLS = typeof options.ignoredUrls !== 'undefined' ?
+            getOptionsArray(options.ignoredUrls) : IGNORED_URLS;
+        IGNORED_URLS_ACTIVE = typeof options.ignoredUrlsActive !== 'undefined' ?
+            options.ignoredUrlsActive : IGNORED_URLS_ACTIVE;
         SHOW_FAVICONS = typeof options.showFavicons !== 'undefined' ? options.showFavicons : SHOW_FAVICONS;
         TO_LOWERCASE = typeof options.toLowercase !== 'undefined' ? options.toLowercase : TO_LOWERCASE;
     };
@@ -209,6 +223,11 @@ function CheckmarksSidebar() {
             onRequestCompleted,
             {urls: ['<all_urls>']}
         );
+        browser.webRequest.onAuthRequired.addListener(
+            cancelAuth,
+            {urls: ['<all_urls>']},
+            ["blocking"]
+        );
     };
 
     /**
@@ -219,6 +238,7 @@ function CheckmarksSidebar() {
         browser.webNavigation.onCompleted.removeListener(onNavigationCompleted);
         browser.webNavigation.onErrorOccurred.removeListener(onNavigationError);
         browser.webRequest.onCompleted.removeListener(onRequestCompleted);
+        browser.webRequest.onAuthRequired.removeListener(cancelAuth);
     };
 
     /**
@@ -240,6 +260,18 @@ function CheckmarksSidebar() {
         });
 
         resetState();
+    };
+
+    /**
+     * Cancels request with authentication.
+     * @param details {{}}
+     * @return {{cancel: boolean}}
+     */
+    let cancelAuth = function (details) {
+        console.info(`WARN: Canceling authentication for request: ${details.url};`);
+        tabRequestMap[details.url] = ERROR_AUTH_REQUIRED;
+
+        return {cancel: true};
     };
 
     /**
@@ -280,7 +312,9 @@ function CheckmarksSidebar() {
      */
     let walk = function (treeItem, path) {
         if (treeItem.url && treeItem.url.startsWith('http')) {
-            if (isIgnored(treeItem.url, IGNORED_URLS) || isIgnored(path, IGNORED_DIRS)) {
+            if ((IGNORED_URLS_ACTIVE && isIgnored(treeItem.url, IGNORED_URLS)) ||
+                (IGNORED_DIRS_ACTIVE && isIgnored(path, IGNORED_DIRS)) ||
+                (INCLUDED_DIRS_ACTIVE && !isIgnored(path, INCLUDED_DIRS))) {
                 // The bookmark or currently processed folder is ignored.
                 // Maybe display information about ignored bookmarks?
                 bookmarksIgnored.push(treeItem);
@@ -399,6 +433,10 @@ function CheckmarksSidebar() {
 
             if (errorCode in ERROR_CODES_TO_TYPE) {
                 let errorType = ERROR_CODES_TO_TYPE[errorCode];
+                // override if canceled by extension (for example cancelAuth).
+                if (details.url in tabRequestMap) {
+                    errorType = tabRequestMap[details.url];
+                }
                 // Capitalize and remove underline characters!
                 let errorString = (errorType.charAt(0).toUpperCase() + errorType.slice(1)).replace(/_/g, ' ');
                 let bookmark = tabRegistry[details.tabId];

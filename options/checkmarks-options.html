@@ -30,10 +30,24 @@
 <label>Ignored directories contain:<br>
   <input type="text" id="ignored-dirs"><br>
   <small>
-    (Use paths like "path/to/archive" to be more specific!)
+    (Use paths like "path/to/archive" to be more specific! Path-matching is not case-sensitive.)<br>
   </small>
+  <label>active: <input type="checkbox" id="ignored-dirs-active"></label>
 </label>
-<label>Ignored urls contain:<br><input type="text" id="ignored-urls"></label>
+<label>Included directories contain:<br>
+  <input type="text" id="included-dirs"><br>
+  <small>
+    (All other directories will be ignored. Ignored directories and urls within indcluded directories remain ignored.)<br>
+  </small>
+  <label>active: <input type="checkbox" id="included-dirs-active"></label>
+</label>
+<label>Ignored URLs contain:<br>
+  <input type="text" id="ignored-urls"><br>
+  <small>
+    (Not case-sensitive.)<br>
+  </small>
+  <label>active: <input type="checkbox" id="ignored-urls-active"></label>
+</label>
 <label>Show recently loaded favicons while running: <input type="checkbox" id="show-favicons"></label>
 <label>Reformat bookmark titles to lowercase: <input type="checkbox" id="to-lowercase"></label>
 <script src="../commons/checkmarks-commons.js"></script>

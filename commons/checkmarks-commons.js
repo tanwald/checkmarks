@@ -7,7 +7,11 @@ function DefaultsStore() {
     const TIMEOUT_OVERRULE = 5;
     const MAX_TABS = 5;
     const IGNORED_DIRS = ['archive', 'local'];
+    const IGNORED_DIRS_ACTIVE = false;
+    const INCLUDED_DIRS = [];
+    const INCLUDED_DIRS_ACTIVE = false;
     const IGNORED_URLS = ['localhost', '192.168.', '172.16.', '10.'];
+    const IGNORED_URLS_ACTIVE = true;
     const SHOW_FAVICONS = true;
     const TO_LOWERCASE = false;
 
@@ -23,12 +27,28 @@ function DefaultsStore() {
         return MAX_TABS;
     };
 
+    this.getIgnoredDirs = function () {
+        return IGNORED_DIRS;
+    };
+
+    this.getIgnoredDirsActive = function () {
+        return IGNORED_DIRS_ACTIVE;
+    };
+
+    this.getIncludedDirs = function () {
+        return INCLUDED_DIRS;
+    };
+
+    this.getIncludedDirsActive = function () {
+        return INCLUDED_DIRS_ACTIVE;
+    };
+
     this.getIgnoredUrls = function () {
         return IGNORED_URLS;
     };
 
-    this.getIgnoredDirs = function () {
-        return IGNORED_DIRS;
+    this.getIgnoredUrlsActive = function () {
+        return IGNORED_URLS_ACTIVE;
     };
 
     this.getShowFavicons = function () {
