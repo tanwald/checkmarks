@@ -588,7 +588,7 @@ function CheckmarksSidebar() {
         const message = document.createElement('div');
         message.className = 'message';
         message.append(createActionIcons(bookmark));
-        message.append(createIcon('folder_open', '', bookmark.path));
+        message.append(createIcon('folder_open', '', 'folder: ' + bookmark.path));
         message.append(createIcon(ERROR_TYPE_TO_ICON[error], 'error', error.replace(/_/g, ' ')));
         message.append(document.createTextNode(bookmark.title.toLowerCase()));
 
@@ -605,7 +605,7 @@ function CheckmarksSidebar() {
     let createActionIcons = function (bookmark) {
         const actionContainer = document.createElement('span');
 
-        const deleteFromBookmarksIcon = createIcon('delete', 'button');
+        const deleteFromBookmarksIcon = createIcon('delete', 'button', 'delete bookmark');
         deleteFromBookmarksIcon.addEventListener('click', () => {
             if (removalConfirmed) {
                 removeBookmark(bookmark.id, true);
@@ -618,17 +618,17 @@ function CheckmarksSidebar() {
         });
         actionContainer.append(deleteFromBookmarksIcon);
 
-        const deleteFromListIcon = createIcon('check_circle', 'button');
+        const deleteFromListIcon = createIcon('check_circle', 'button', 'checked: remove from list');
         deleteFromListIcon.addEventListener('click', () => {
             removeBookmark(bookmark.id, false);
         });
         actionContainer.append(deleteFromListIcon);
 
-        const launchIcon = createIcon('launch', 'button');
+        const launchIcon = createIcon('launch', 'button', 'launch in a new tab');
         launchIcon.addEventListener('click', () => {
             browser.tabs.create({url: bookmark.url, index: 1})
                 .then((tab) => {
-                    const saveIcon = createIcon('save', 'button');
+                    const saveIcon = createIcon('save', 'button', 'update with url of launched tab');
                     saveIcon.addEventListener('click', () => {
                         browser.tabs.get(tab.id)
                             .then((loadedTab) => {
