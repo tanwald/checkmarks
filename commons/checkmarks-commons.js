@@ -14,6 +14,7 @@ function DefaultsStore() {
     const IGNORED_URLS_ACTIVE = true;
     const SHOW_FAVICONS = true;
     const TO_LOWERCASE = false;
+    const CLEAR_CACHE = false;
 
     this.getTimeout = function () {
         return TIMEOUT;
@@ -58,6 +59,10 @@ function DefaultsStore() {
     this.getToLowercase = function () {
         return TO_LOWERCASE;
     };
+
+    this.getClearCache = function () {
+        return CLEAR_CACHE;
+    }
 }
 
 const CM_DEFAULTS = new DefaultsStore();

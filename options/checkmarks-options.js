@@ -15,6 +15,7 @@ function CheckmarksOptions() {
     const ignoredUrlsCheckbox = document.getElementById('ignored-urls-active');
     const showFaviconsCheckbox = document.getElementById('show-favicons');
     const toLowercaseCheckbox = document.getElementById('to-lowercase');
+    const clearCacheCheckbox = document.getElementById('clear-cache');
 
     /**
      * Registers event-listeners to store options on input and retrieve them on load.
@@ -41,7 +42,8 @@ function CheckmarksOptions() {
             ignoredUrls: ignoredUrlsInput.value,
             ignoredUrlsActive: ignoredUrlsCheckbox.checked,
             showFavicons: showFaviconsCheckbox.checked,
-            toLowercase: toLowercaseCheckbox.checked
+            toLowercase: toLowercaseCheckbox.checked,
+            clearCache: clearCacheCheckbox.checked
         });
     };
 
@@ -62,6 +64,7 @@ function CheckmarksOptions() {
                 ignoredUrlsCheckbox.checked = options.ignoredUrlsActive || CM_DEFAULTS.getIgnoredUrlsActive();
                 showFaviconsCheckbox.checked = options.showFavicons || CM_DEFAULTS.getShowFavicons();
                 toLowercaseCheckbox.checked = options.toLowercase || CM_DEFAULTS.getToLowercase();
+                clearCacheCheckbox.checked = options.clearCache || CM_DEFAULTS.getClearCache();
             });
     };
 }

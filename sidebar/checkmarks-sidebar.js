@@ -16,6 +16,7 @@ function CheckmarksSidebar() {
     let IGNORED_URLS_ACTIVE = CM_DEFAULTS.getIgnoredUrlsActive();
     let SHOW_FAVICONS = CM_DEFAULTS.getShowFavicons();
     let TO_LOWERCASE = CM_DEFAULTS.getToLowercase();
+    let CLEAR_CACHE = CM_DEFAULTS.getClearCache();
 
     // Constants for error-mapping and tooltips.
     // Custom error definitions:
@@ -115,8 +116,17 @@ function CheckmarksSidebar() {
                     setOptions(options);
                     resetState();
 
-                    browser.bookmarks.getTree()
-                        .then(run);
+                    if (CLEAR_CACHE) {
+                        browser.browsingData.removeCache({})
+                            .then(() => {
+                                console.info('INFO: Cleared cache;');
+                                browser.bookmarks.getTree()
+                                    .then(run);
+                            });
+                    } else {
+                        browser.bookmarks.getTree()
+                            .then(run);
+                    }
                 });
         });
 
@@ -186,6 +196,7 @@ function CheckmarksSidebar() {
             options.ignoredUrlsActive : IGNORED_URLS_ACTIVE;
         SHOW_FAVICONS = typeof options.showFavicons !== 'undefined' ? options.showFavicons : SHOW_FAVICONS;
         TO_LOWERCASE = typeof options.toLowercase !== 'undefined' ? options.toLowercase : TO_LOWERCASE;
+        CLEAR_CACHE = typeof options.clearCache !== 'undefined' ? options.clearCache : CLEAR_CACHE;
     };
 
     /**
