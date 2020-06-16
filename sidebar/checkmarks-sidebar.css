@@ -2,6 +2,13 @@
  * CHECKMARKS SIDEBAR
  **********************************************************************************************************************/
 
+@media (prefers-color-scheme: dark) {
+    body {
+        color: #b1b1b3;
+        background-color: #38383d;
+    }
+}
+
 /**********************************************************************************************************************
  * TOP LEVEL CONTROLS/INDICATORS
  **********************************************************************************************************************/
@@ -45,6 +52,12 @@ header {
     background-color: rgba(241, 242, 242, .9);
 }
 
+@media (prefers-color-scheme: dark) {
+    #progress-container {
+        background-color: #38383d;
+    }
+}
+
 #progress-bar {
     height: 100%;
     width: 0;
@@ -66,6 +79,12 @@ header {
     font-size: 12px;
 }
 
+@media (prefers-color-scheme: dark) {
+    #stats {
+        background-color: #38383d;
+    }
+}
+
 /**********************************************************************************************************************
  * FAVICONS
  **********************************************************************************************************************/
@@ -77,6 +96,12 @@ header {
     padding: 10px 0;
     border-bottom: 1px solid #A9A59F;
     background-color: rgba(255, 255, 255, .9);
+}
+
+@media (prefers-color-scheme: dark) {
+    #favicons {
+        background-color: #38383d;
+    }
 }
 
 .favicon {
@@ -138,6 +163,12 @@ header {
     border: 1px solid #A9A59F;
     background-color: #FFF;
     font-size: 12px;
+}
+
+@media (prefers-color-scheme: dark) {
+    .modal-content {
+        background-color: #38383d;
+    }
 }
 
 .modal-content .icon {

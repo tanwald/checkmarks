@@ -69,5 +69,5 @@ function CheckmarksOptions() {
     };
 }
 
-const checkmarksOptions = new CheckmarksOptions();
+const checkmarksOptions = new CheckmarksOptions(); 
 checkmarksOptions.init();

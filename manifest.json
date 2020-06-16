@@ -2,13 +2,13 @@
   "manifest_version": 2,
   "name": "Checkmarks",
   "description": "Check bookmarks and reload favicons!",
-  "version": "1.3.0",
+  "version": "1.4.0",
   "icons": {
-    "48": "assets/images/icons/checkmarks-logo.svg",
-    "96": "assets/images/icons/checkmarks-logo.svg"
+    "48": "assets/images/logo.svg",
+    "96": "assets/images/logo.svg"
   },
   "sidebar_action": {
-    "default_icon": "assets/images/icons/checkmarks-simple.svg",
+    "default_icon": "assets/images/icon-light.svg",
     "default_title": "Checkmarks",
     "default_panel": "sidebar/checkmarks-sidebar.html"
   },

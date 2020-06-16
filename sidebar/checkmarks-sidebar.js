@@ -87,6 +87,8 @@ function CheckmarksSidebar() {
     const MESSAGES_MARGIN_TOP = '80px';
     const MESSAGES_MARGIN_TOP_FAVICON_BAR = '120px';
 
+    let errors = [];
+
     let startTime;
     let bookmarks = [];
     let urls = {};
@@ -103,9 +105,10 @@ function CheckmarksSidebar() {
     let removalConfirmed = false;
 
     /**
-     * Registers the event-listeners for sidebar controls.
+     * Registers the event-listeners for sidebar controls and sets the icon according to the system theme.
      */
     this.init = function () {
+        setIcon();
         // Start button that initializes the chain of events.
         START.addEventListener('click', () => {
             CANCEL.style.display = 'inline';
@@ -172,6 +175,21 @@ function CheckmarksSidebar() {
                 PROGRESS.innerText = '';
             }
         })
+    };
+
+    let setIcon = function () {
+        const isDarkScheme = window.matchMedia('(prefers-color-scheme: dark)').matches;
+        console.debug(`System uses dark color scheme: ${isDarkScheme}.`);
+
+        browser.sidebarAction.setIcon({
+            path: isDarkScheme ? {
+                16: '/assets/images/icon-light.svg',
+                32: '/assets/images/icon-light.svg'
+            } : {
+                16: '/assets/images/icon-dark.svg',
+                32: '/assets/images/icon-dark.svg'
+            }
+        });
     };
 
     /**
@@ -325,10 +343,11 @@ function CheckmarksSidebar() {
         if (treeItem.url && treeItem.url.startsWith('http')) {
             if ((IGNORED_URLS_ACTIVE && isIgnored(treeItem.url, IGNORED_URLS)) ||
                 (IGNORED_DIRS_ACTIVE && isIgnored(path, IGNORED_DIRS)) ||
-                (INCLUDED_DIRS_ACTIVE && !isIgnored(path, INCLUDED_DIRS))) {
+                (INCLUDED_DIRS_ACTIVE && !isIgnored(path, INCLUDED_DIRS)) ||
+                bookmarksIgnored.includes(treeItem.id)) {
                 // The bookmark or currently processed folder is ignored.
                 // Maybe display information about ignored bookmarks?
-                bookmarksIgnored.push(treeItem);
+                bookmarksIgnored.push(treeItem.id);
             } else {
                 // Format
                 if (TO_LOWERCASE) {
@@ -592,6 +611,7 @@ function CheckmarksSidebar() {
      * @param error {string} Type of error.
      */
     let appendErrorMessage = function (bookmark, error) {
+        errors.push({bookmark: bookmark, error: error});
         const messageContainer = document.createElement('div');
         messageContainer.id = bookmark.id;
         messageContainer.className = 'message-container';
