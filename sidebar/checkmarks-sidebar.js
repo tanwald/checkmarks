@@ -68,12 +68,13 @@ function CheckmarksSidebar() {
 
     // DOM objects.
     const START = document.getElementById('start');
+    const PAUSE = document.getElementById('pause');
     const CANCEL = document.getElementById('cancel');
     const OPTIONS = document.getElementById('options');
     const HELP = document.getElementById('help');
     const PROGRESS = document.getElementById('progress');
     const PROGRESS_BAR = document.getElementById('progress-bar');
-    const STATS = document.getElementById('stats');
+    const STATISTICS = document.getElementById('statistics');
     const FAVICONS = document.getElementById('favicons');
     const MESSAGES = document.getElementById('messages');
     const MODAL = document.getElementById('modal');
@@ -87,60 +88,50 @@ function CheckmarksSidebar() {
     const MESSAGES_MARGIN_TOP = '80px';
     const MESSAGES_MARGIN_TOP_FAVICON_BAR = '120px';
 
-    let errors = [];
-
     let startTime;
+    let hostWindowId;
+    let modalBookmarkId;
+    let removalConfirmed = false;
+
+    let errors = [];
     let bookmarks = [];
-    let urls = {};
     let bookmarksIgnored = [];
-    let bookmarksToProcess = 0;
-    let bookmarksProcessed = 0;
-    let errorCount = 0;
+    let bookmarksProcessed = {};
+    let bookmarksTotal = 0;
+    let paused = false;
+
+    let urls = {};
     let tabCount = 0;
     let tabRegistry = {}; // tabId => bookmark, tabIdcomplete => true/false
     let tabRequestMap = {}; // tabId => requestCount, tabUrl => error
     let timeoutIds = [];
-    let hostWindowId;
-    let modalBookmarkId;
-    let removalConfirmed = false;
 
     /**
      * Registers the event-listeners for sidebar controls and sets the icon according to the system theme.
      */
     this.init = function () {
+        console.debug('DEBUG: Initializing...');
         setIcon();
+        restoreRun();
         // Start button that initializes the chain of events.
-        START.addEventListener('click', () => {
-            CANCEL.style.display = 'inline';
-            startTime = Date.now();
-            browser.storage.local.get()
-                .then((options) => {
+        START.addEventListener('click', start);
 
-                    setOptions(options);
-                    resetState();
-
-                    if (CLEAR_CACHE) {
-                        browser.browsingData.removeCache({})
-                            .then(() => {
-                                console.info('INFO: Cleared cache;');
-                                browser.bookmarks.getTree()
-                                    .then(run);
-                            });
-                    } else {
-                        browser.bookmarks.getTree()
-                            .then(run);
-                    }
-                });
-        });
+        // Pause button that pauses the chain of events.
+        PAUSE.addEventListener('click', pause);
 
         // Cancel button that interrupts the chain of events.
         CANCEL.addEventListener('click', () => {
+            PAUSE.style.display = 'none';
+            CANCEL.style.display = 'none';
+            paused = false;
             cancel();
+            reset();
         });
 
         // Link to options page.
         OPTIONS.addEventListener('click', () => {
-            browser.runtime.openOptionsPage();
+            browser.runtime.openOptionsPage()
+                .then(() => console.info('INFO: Options page opened.'));
         });
 
         // Open help modal.
@@ -179,7 +170,7 @@ function CheckmarksSidebar() {
 
     let setIcon = function () {
         const isDarkScheme = window.matchMedia('(prefers-color-scheme: dark)').matches;
-        console.debug(`System uses dark color scheme: ${isDarkScheme}.`);
+        console.info(`INFO: Dark color scheme: ${isDarkScheme}.`);
 
         browser.sidebarAction.setIcon({
             path: isDarkScheme ? {
@@ -218,27 +209,64 @@ function CheckmarksSidebar() {
     };
 
     /**
-     * Resets some UI elements and almost all state members to their initial state.
+     * Transforms a comma separated string into an array of options.
+     * @param option {string} Raw comma separated string.
+     * @returns {string[]} Array of options.
+     */
+    let getOptionsArray = function (option) {
+        return option
+            .split(',')
+            .map(x => x.trim())
+            .filter(x => x !== '');
+    };
+
+    /**
+     * Resets almost all state members to their initial state.
      */
     let resetState = function () {
-        PROGRESS_BAR.style.width = '0%';
-        PROGRESS.innerText = '';
-        MESSAGES.innerHTML = '';
-        MESSAGES.style.marginTop = MESSAGES_MARGIN_TOP;
-        STATS.style.display = 'none';
-        FAVICONS.style.display = 'none';
-        FAVICONS.innerHTML = '';
-
-        bookmarks = [];
+        paused = false;
         urls = {};
-        bookmarksIgnored = [];
-        bookmarksToProcess = 0;
-        bookmarksProcessed = 0;
-        errorCount = 0;
         tabCount = 0;
         tabRegistry = {};
         tabRequestMap = {};
         timeoutIds = [];
+    };
+
+    /**
+     * Resets bookmark information.
+     */
+    let resetBookmarks = function () {
+        bookmarks = [];
+        bookmarksIgnored = [];
+        // Keep information for restored (bookmarksTotal = 0) or resumed (paused) runs!
+        if (bookmarksTotal > 0 && !paused) {
+            errors = [];
+            bookmarksProcessed = {};
+        }
+        browser.storage.local.remove(['processed', 'errors'])
+            .then(() => console.info('INFO: Removed run from local storage.'));
+    };
+
+    /**
+     * Resets UI elements.
+     */
+    let resetUI = function () {
+        PROGRESS_BAR.style.width = '0%';
+        PROGRESS.innerText = '';
+        MESSAGES.innerHTML = '';
+        STATISTICS.style.display = 'none';
+        FAVICONS.style.display = 'none';
+        FAVICONS.innerHTML = '';
+        MESSAGES.style.marginTop = MESSAGES_MARGIN_TOP;
+    };
+
+    /**
+     * Resets everything.
+     */
+    let reset = function () {
+        resetState();
+        resetBookmarks();
+        resetUI();
     };
 
     /**
@@ -271,11 +299,60 @@ function CheckmarksSidebar() {
     };
 
     /**
-     * Cancels a running bookmarks-check. Events are blocked, listeners and timeouts removed, opened tabs closed
-     * and state is reset.
+     * Initializes the chain of events.
+     */
+    let start = function () {
+        startTime = Date.now();
+
+        PAUSE.style.display = 'inline';
+        CANCEL.style.display = 'inline';
+
+        browser.storage.local.get()
+            .then((storage) => {
+                setOptions(storage.options || {});
+                const processedCount = Object.keys(bookmarksProcessed).length;
+                if (processedCount > 0 && processedCount !== bookmarksTotal) {
+                    console.debug('DEBUG: Resuming run...');
+
+                    resetBookmarks();
+                    resetState();
+                } else {
+                    console.debug('DEBUG: New run...');
+                    if (processedCount > 0) {
+                        reset();
+                    }
+                    createPlaceholder();
+                }
+
+                if (CLEAR_CACHE) {
+                    browser.browsingData.removeCache({})
+                        .then(() => {
+                            console.info('INFO: Cleared cache.');
+                            browser.bookmarks.getTree()
+                                .then(run);
+                        });
+                } else {
+                    browser.bookmarks.getTree()
+                        .then(run);
+                }
+            });
+    }
+
+    /**
+     * Pauses a running bookmarks-check. Events are blocked, listeners and timeouts removed, opened tabs closed
+     * and errors are stored before state is reset.
+     */
+    let pause = function () {
+        paused = true;
+        cancel();
+        PAUSE.style.display = 'none';
+        storeRun();
+    };
+
+    /**
+     * Cancels a running bookmarks-check. Events are blocked, listeners and timeouts removed and opened tabs closed.
      */
     let cancel = function () {
-        CANCEL.style.display = 'none';
         removeListeners();
 
         timeoutIds.forEach((id) => {
@@ -287,8 +364,33 @@ function CheckmarksSidebar() {
                 browser.tabs.remove(parseInt(id));
             }
         });
+    };
 
+    /**
+     * Finishing touches after all bookmarks are processed;
+     */
+    let finish = function () {
+        console.debug('DEBUG: Finishing...');
+        storeRun();
+        removeListeners();
         resetState();
+
+        PAUSE.style.display = 'none';
+        if (SHOW_FAVICONS) {
+            FAVICONS.style.display = 'none';
+            MESSAGES.style.marginTop = MESSAGES_MARGIN_TOP;
+        }
+
+        let endTime = Date.now();
+        if (window.innerWidth > MIN_WINDOW_WIDTH && endTime - startTime < 1000 * 60 * 60 * 24) {
+            // If the sidebar is to narrow the duration would overlap the controls.
+            // This simple ms-conversion only works for durations shorter than one day.
+            setTimeout(() => {
+                PROGRESS.innerText = new Date(endTime - startTime)
+                    .toUTCString()
+                    .slice(17, 25);
+            }, POST_LOAD_TIMEOUT);
+        }
     };
 
     /**
@@ -309,21 +411,16 @@ function CheckmarksSidebar() {
      * @param tree {browser.bookmarks.BookmarkTreeNode}
      */
     let run = function (tree) {
-        // Empty error-list row to allow tooltips above the first regular error-entry.
-        const placeholder = document.createElement('div');
-        placeholder.className = 'message-container';
-        MESSAGES.append(placeholder);
-
+        bookmarksTotal = 0;
         // Collect bookmark-information
         walk(tree[0], '/');
 
-        bookmarksToProcess = bookmarks.length;
-        setStats();
+        setStatistics();
         registerListeners();
 
         browser.windows.getCurrent()
             .then((window) => {
-                // Open tabs only in the window the extension was started in!
+                // Open tabs only in the window the extension was started i n!
                 hostWindowId = window.id;
 
                 while (tabCount < MAX_TABS && bookmarks.length > 0) {
@@ -341,14 +438,13 @@ function CheckmarksSidebar() {
      */
     let walk = function (treeItem, path) {
         if (treeItem.url && treeItem.url.startsWith('http')) {
+            bookmarksTotal++;
             if ((IGNORED_URLS_ACTIVE && isIgnored(treeItem.url, IGNORED_URLS)) ||
                 (IGNORED_DIRS_ACTIVE && isIgnored(path, IGNORED_DIRS)) ||
-                (INCLUDED_DIRS_ACTIVE && !isIgnored(path, INCLUDED_DIRS)) ||
-                bookmarksIgnored.includes(treeItem.id)) {
+                (INCLUDED_DIRS_ACTIVE && !isIgnored(path, INCLUDED_DIRS))) {
                 // The bookmark or currently processed folder is ignored.
-                // Maybe display information about ignored bookmarks?
                 bookmarksIgnored.push(treeItem.id);
-            } else {
+            } else if (!(treeItem.id in bookmarksProcessed)) {
                 // Format
                 if (TO_LOWERCASE) {
                     browser.bookmarks.update(treeItem.id, {title: treeItem.title.toLowerCase()});
@@ -356,14 +452,15 @@ function CheckmarksSidebar() {
                 treeItem['path'] = path.replace(/(^\/\/|\/$)/g, '').toLowerCase();
                 if (treeItem.url in urls) {
                     // Bookmark is duplicated.
-                    reportDuplicate(treeItem);
+                    reportError(treeItem, ERROR_DUPLICATE);
+                    bookmarksProcessed[treeItem.id] = true;
                 } else {
                     // Store urls for duplicate-check.
                     urls[treeItem.url] = true;
                     bookmarks.push(treeItem);
                 }
             }
-        } else if (typeof treeItem.children !== 'undefined') {
+        } else if (treeItem.children) {
             // In order to get statistics recurse into the folder even if it is ignored!
             treeItem.children.forEach((child) => {
                 walk(child, path + treeItem.title + '/');
@@ -492,37 +589,15 @@ function CheckmarksSidebar() {
      * @param tabId {number} Id of the removed tab.
      */
     let onRemoved = function (tabId) {
-        if (tabId in tabRegistry) {
+        if (!paused && tabId in tabRegistry) {
+            bookmarksProcessed[tabRegistry[tabId].id] = true;
             delete tabRegistry[tabId];
-
-            bookmarksProcessed++;
             tabCount--;
 
-            let percent = Math.round(bookmarksProcessed / bookmarksToProcess * 100) + '%';
-            PROGRESS_BAR.style.width = percent;
-            if (window.innerWidth > MIN_WINDOW_WIDTH) {
-                PROGRESS.innerText = percent;
-            }
+            setProgress();
 
-            if (bookmarksProcessed === bookmarksToProcess) {
-                removeListeners();
-
-                CANCEL.style.display = 'none';
-                if (SHOW_FAVICONS) {
-                    FAVICONS.style.display = 'none';
-                    MESSAGES.style.marginTop = MESSAGES_MARGIN_TOP;
-                }
-
-                let endTime = Date.now();
-                if (window.innerWidth > MIN_WINDOW_WIDTH && endTime - startTime < 1000 * 60 * 60 * 24) {
-                    // If the sidebar is to narrow the duration would overlap the controls.
-                    // This simple ms-conversion only works for durations shorter than one day.
-                    setTimeout(() => {
-                        PROGRESS.innerText = new Date(endTime - startTime)
-                            .toUTCString()
-                            .slice(17, 25);
-                    }, POST_LOAD_TIMEOUT);
-                }
+            if (bookmarks.length + tabCount === 0) {
+                finish();
             } else if (bookmarks.length > 0) {
                 loadBookmark();
             }
@@ -553,7 +628,7 @@ function CheckmarksSidebar() {
      * @param tab {tabs.Tab} Successfully loaded tab.
      */
     let handleSuccess = function (tab) {
-        if (SHOW_FAVICONS && typeof tab.favIconUrl !== 'undefined') {
+        if (SHOW_FAVICONS && tab.favIconUrl) {
             setFavicon(tab.favIconUrl);
         }
         timeoutIds.push(setTimeout(() => {
@@ -570,14 +645,12 @@ function CheckmarksSidebar() {
     let handleError = function (tabId, error) {
         let unverifiedBookmark = tabRegistry[tabId];
 
-        if (typeof unverifiedBookmark !== 'undefined') {
+        if (unverifiedBookmark) {
             // Keep on loading on redirect. The tab is likely to complete successfully.
             if (error !== ERROR_BINDING_ABORTED) {
                 browser.tabs.remove(tabId);
             }
-            errorCount++;
-            setStats();
-            appendErrorMessage(unverifiedBookmark, error);
+            reportError(unverifiedBookmark, error);
         }
     };
 
@@ -595,23 +668,21 @@ function CheckmarksSidebar() {
     };
 
     /**
-     * Appends an error message for a duplicated bookmark to the UI.
-     * @param bookmark {browser.bookmarks.BookmarkTreeNode}
-     */
-    let reportDuplicate = function (bookmark) {
-        if (typeof bookmark !== 'undefined') {
-            errorCount++;
-            appendErrorMessage(bookmark, ERROR_DUPLICATE);
-        }
-    };
-
-    /**
-     * Appends an error message to the messages-list of the UI.
+     * Temporarily stores errors and appends an error message to the messages-list of the UI.
      * @param bookmark {browser.bookmarks.BookmarkTreeNode} Invalid bookmark.
      * @param error {string} Type of error.
      */
-    let appendErrorMessage = function (bookmark, error) {
-        errors.push({bookmark: bookmark, error: error});
+    let reportError = function (bookmark, error) {
+        errors.push({
+            bookmark: {
+                id: bookmark.id,
+                title: bookmark.title,
+                url: bookmark.url,
+                path: bookmark.path
+            },
+            error: error
+        });
+
         const messageContainer = document.createElement('div');
         messageContainer.id = bookmark.id;
         messageContainer.className = 'message-container';
@@ -626,6 +697,26 @@ function CheckmarksSidebar() {
         messageContainer.append(message);
 
         MESSAGES.append(messageContainer);
+        setStatistics();
+    };
+
+    /**
+     * Creates an empty error-list row to allow tooltips above the first regular error-entry.
+     */
+    let createPlaceholder = function () {
+        const placeholder = document.createElement('div');
+        placeholder.className = 'message-container';
+        MESSAGES.append(placeholder);
+    };
+
+    /**
+     * Creates the error list from existing errors.
+     * @param existingErrors Error storage to use
+     */
+    let createList = function (existingErrors) {
+        existingErrors.forEach((error) => {
+            reportError(error.bookmark, error.error);
+        });
     };
 
     /**
@@ -683,19 +774,6 @@ function CheckmarksSidebar() {
     };
 
     /**
-     * Temporarily sets the given CSS class
-     * @param element {HTMLElement} Element where the class should be set.
-     * @param cssClass {string} Name of the class to set.
-     */
-    let setTempClass = function (element, cssClass) {
-        element.classList.add(cssClass);
-
-        timeoutIds.push(setTimeout(() => {
-            element.classList.remove(cssClass);
-        }, 2000));
-    };
-
-    /**
      * Creates tooltip icons for error types or simple icons for actions.
      * @param iconId {string} Id of the material icon.
      * @param cssClass {string} (Optional) Additional CSS class
@@ -709,11 +787,11 @@ function CheckmarksSidebar() {
         simpleIcon.classList = 'material-icons icon';
         simpleIcon.append(document.createTextNode(iconId));
 
-        if (typeof cssClass !== 'undefined' && cssClass !== '') {
+        if (cssClass && cssClass !== '') {
             simpleIcon.classList.add(cssClass);
         }
 
-        if (typeof tooltip !== 'undefined') {
+        if (tooltip) {
             const tooltipIconContainer = document.createElement('div');
             const tooltipTextContainer = document.createElement('span');
             const tooltipText = document.createTextNode(tooltip);
@@ -735,13 +813,39 @@ function CheckmarksSidebar() {
     };
 
     /**
+     * Temporarily sets the given CSS class
+     * @param element {HTMLElement} Element where the class should be set.
+     * @param cssClass {string} Name of the class to set.
+     */
+    let setTempClass = function (element, cssClass) {
+        element.classList.add(cssClass);
+
+        timeoutIds.push(setTimeout(() => {
+            element.classList.remove(cssClass);
+        }, 2000));
+    };
+
+    /**
+     * Updates progress information.
+     */
+    let setProgress = function () {
+        const processedCount = Object.keys(bookmarksProcessed).length + bookmarksIgnored.length;
+        console.debug(`DEBUG: Processed: ${processedCount}/${bookmarksTotal}`);
+        const percent = Math.round(processedCount / bookmarksTotal * 100) + '%';
+        PROGRESS_BAR.style.width = percent;
+        if (window.innerWidth > MIN_WINDOW_WIDTH) {
+            PROGRESS.innerText = percent;
+        }
+    };
+
+    /**
      * Displays statistics for scanned bookmarks (total, ignored, problems).
      */
-    let setStats = function () {
-        STATS.style.display = 'block';
-        STATS.innerHTML = '<b>Total:</b> ' + (bookmarksToProcess + bookmarksIgnored.length)
+    let setStatistics = function () {
+        STATISTICS.style.display = 'block';
+        STATISTICS.innerHTML = '<b>Total:</b> ' + bookmarksTotal
             + ' <b>Ignored:</b> ' + bookmarksIgnored.length
-            + ' <b>Problems:</b> ' + errorCount;
+            + ' <b>Problems:</b> ' + errors.length;
     };
 
     /**
@@ -772,32 +876,57 @@ function CheckmarksSidebar() {
         if (permanently) {
             browser.bookmarks.remove(id)
                 .then(() => {
-                    document.getElementById(id).remove();
-                    errorCount--;
-                    setStats();
+                    bookmarksTotal--;
+                    delete bookmarksProcessed[id];
+                    hideBookmark(id);
                 }, (error) => {
                     // After a reported redirection another error may occur for the same bookmark which results in
                     // two entries in the UI.
                     console.warn(`WARNING: Could not remove bookmark ${id}: ${error}; Already removed before?`);
                 });
         } else {
-            document.getElementById(id).remove();
-            errorCount--;
-            setStats();
+            hideBookmark(id);
         }
     };
 
     /**
-     * Transforms a comma separated string into an array of options.
-     * @param option {string} Raw comma separated string.
-     * @returns {string[]} Array of options.
+     * Hides a bookmark from the UI list and updates statistics.
+     * @param id {string} Id of the bookmark that is to be removed.
      */
-    let getOptionsArray = function (option) {
-        return option
-            .split(',')
-            .map(x => x.trim())
-            .filter(x => x !== '');
+    let hideBookmark = function (id) {
+        document.getElementById(id).remove();
+        errors = errors.filter((error) => error.bookmark.id !== id);
+        setStatistics();
     };
+
+    /**
+     * Stores errors and processed bookmarks in local storage.
+     */
+    let storeRun = function () {
+        browser.storage.local.set({
+            processed: bookmarksProcessed,
+            errors: errors
+        }).then(() => console.info('INFO: Stored run in local storage.'));
+    }
+
+    /**
+     * Restores errors and processed bookmarks from local storage - if available.
+     */
+    let restoreRun = function () {
+        browser.storage.local.get()
+            .then((storage) => {
+                if (storage.processed && Object.keys(storage.processed).length > 0) {
+                    console.debug('DEBUG: Restoring run...');
+                    console.debug(storage.processed, storage.errors);
+
+                    CANCEL.style.display = 'inline';
+
+                    bookmarksProcessed = storage.processed;
+                    createPlaceholder();
+                    createList(storage.errors);
+                }
+            });
+    }
 }
 
 const checkmarksSidebar = new CheckmarksSidebar();

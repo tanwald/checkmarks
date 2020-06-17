@@ -1,7 +1,7 @@
 {
   "manifest_version": 2,
   "name": "Checkmarks",
-  "description": "Check bookmarks and reload favicons!",
+  "description": "Checks bookmarks and loads favicons.",
   "version": "1.4.0",
   "icons": {
     "48": "assets/images/logo.svg",
@@ -17,14 +17,14 @@
     "browser_style": true
   },
   "permissions": [
-    "webRequest",
-    "webRequestBlocking",
-    "webNavigation",
     "<all_urls>",
     "bookmarks",
-    "tabs",
+    "browsingData",
     "storage",
-    "browsingData"
+    "tabs",
+    "webNavigation",
+    "webRequest",
+    "webRequestBlocking"
   ]
 }
 

@@ -9,6 +9,12 @@ html, body {
     color: #4E4947;
 }
 
+@media (prefers-color-scheme: dark) {
+    body {
+        color: #b1b1b3;
+    }
+}
+
 small {
     font-size: 10px;
 }

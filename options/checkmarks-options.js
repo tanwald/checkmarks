@@ -32,18 +32,20 @@ function CheckmarksOptions() {
      */
     let setOptions = function () {
         browser.storage.local.set({
-            requestTimeout: requestTimeoutInput.value,
-            timeoutOverrule: timeoutOverruleInput.value,
-            maxTabs: maxTabsInput.value,
-            ignoredDirs: ignoredDirsInput.value,
-            ignoredDirsActive: ignoredDirsCheckbox.checked,
-            includedDirs: includedDirsInput.value,
-            includedDirsActive: includedDirsCheckbox.checked,
-            ignoredUrls: ignoredUrlsInput.value,
-            ignoredUrlsActive: ignoredUrlsCheckbox.checked,
-            showFavicons: showFaviconsCheckbox.checked,
-            toLowercase: toLowercaseCheckbox.checked,
-            clearCache: clearCacheCheckbox.checked
+            options: {
+                requestTimeout: requestTimeoutInput.value,
+                timeoutOverrule: timeoutOverruleInput.value,
+                maxTabs: maxTabsInput.value,
+                ignoredDirs: ignoredDirsInput.value,
+                ignoredDirsActive: ignoredDirsCheckbox.checked,
+                includedDirs: includedDirsInput.value,
+                includedDirsActive: includedDirsCheckbox.checked,
+                ignoredUrls: ignoredUrlsInput.value,
+                ignoredUrlsActive: ignoredUrlsCheckbox.checked,
+                showFavicons: showFaviconsCheckbox.checked,
+                toLowercase: toLowercaseCheckbox.checked,
+                clearCache: clearCacheCheckbox.checked
+            }
         });
     };
 
@@ -51,7 +53,7 @@ function CheckmarksOptions() {
      * Restores options from local storage or sets default values.
      */
     let restoreOptions = function () {
-        browser.storage.local.get()
+        browser.storage.local.get('options')
             .then((options) => {
                 requestTimeoutInput.value = options.requestTimeout || CM_DEFAULTS.getTimeout();
                 timeoutOverruleInput.value = options.timeoutOverrule || CM_DEFAULTS.getTimeoutOverrule();
@@ -69,5 +71,5 @@ function CheckmarksOptions() {
     };
 }
 
-const checkmarksOptions = new CheckmarksOptions(); 
+const checkmarksOptions = new CheckmarksOptions();
 checkmarksOptions.init();

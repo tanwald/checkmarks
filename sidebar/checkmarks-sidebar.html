@@ -14,6 +14,7 @@
   <header>
     <div id="controls">
       <i id="start" class="material-icons button">play_circle_outline</i>
+      <i id="pause" style="display: none" class="material-icons button">pause_circle_outline</i>
       <i id="cancel" style="display: none" class="material-icons button">highlight_off</i>
       <i id="help" class="material-icons button">help_outline</i>
       <i id="options" class="material-icons button">settings</i>
@@ -22,7 +23,7 @@
     <div id="progress-container">
       <div id="progress-bar"></div>
     </div>
-    <div id="stats"></div>
+    <div id="statistics"></div>
     <div id="favicons"></div>
   </header>
   <div id="messages"></div>
@@ -53,11 +54,15 @@
         <tbody>
         <tr>
           <td><i class="material-icons icon">play_circle_outline</i></td>
-          <td>Starts loading bookmarks and favicons.</td>
+          <td>Starts or resumes loading bookmarks and favicons.</td>
+        </tr>
+        <tr>
+          <td><i class="material-icons icon">pause_circle_outline</i></td>
+          <td>Pauses a run and stores results.</td>
         </tr>
         <tr>
           <td><i class="material-icons icon">highlight_off</i></td>
-          <td>Cancels loading bookmarks and favicons (not paused, only visible while loading).</td>
+          <td>Cancels a run and/or discards results.</td>
         </tr>
         <tr>
           <td><i class="material-icons icon">help_outline</i></td>
@@ -73,7 +78,7 @@
         </tr>
         <tr>
           <td><i class="material-icons icon">check_circle</i></td>
-          <td>Removes an entry from list (checked).</td>
+          <td>Removes an entry from list but does not delete the bookmark (false negative).</td>
         </tr>
         <tr>
           <td><i class="material-icons icon">launch</i></td>

@@ -4,8 +4,7 @@
 
 @media (prefers-color-scheme: dark) {
     body {
-        color: #b1b1b3;
-        background-color: #38383d;
+        background-color: #2d2d2d;
     }
 }
 
@@ -54,7 +53,7 @@ header {
 
 @media (prefers-color-scheme: dark) {
     #progress-container {
-        background-color: #38383d;
+        background-color: #2d2d2d;
     }
 }
 
@@ -67,8 +66,7 @@ header {
 /**********************************************************************************************************************
  * STATISTICS
  **********************************************************************************************************************/
-#stats {
-    display: none;
+#statistics {
     overflow: hidden;
     white-space: nowrap;
     text-overflow: ellipsis;
@@ -77,11 +75,12 @@ header {
     padding: 0 20px;
     line-height: 40px;
     font-size: 12px;
+    display: none;
 }
 
 @media (prefers-color-scheme: dark) {
-    #stats {
-        background-color: #38383d;
+    #statistics {
+        background-color: #2d2d2d;
     }
 }
 
@@ -100,7 +99,7 @@ header {
 
 @media (prefers-color-scheme: dark) {
     #favicons {
-        background-color: #38383d;
+        background-color: #2d2d2d;
     }
 }
 
@@ -167,7 +166,7 @@ header {
 
 @media (prefers-color-scheme: dark) {
     .modal-content {
-        background-color: #38383d;
+        background-color: #2d2d2d;
     }
 }
 
