@@ -156,14 +156,6 @@ function CheckmarksSidebar() {
             MODAL_CANCEL.style.display = 'none';
         });
 
-        // Link to options page.
-        OPTIONS.addEventListener('click', () => {
-            browser.runtime.openOptionsPage()
-                .then(() => console.info('INFO: Options page opened.'));
-        });
-        OPTIONS.addEventListener('mouseenter', () => APOSTROPHE.innerText = 'Open preferences');
-        OPTIONS.addEventListener('mouseleave', () => APOSTROPHE.innerText = '');
-
         // Open help modal.
         HELP.addEventListener('click', () => {
             MODAL.style.display = 'block';
@@ -171,6 +163,14 @@ function CheckmarksSidebar() {
         });
         HELP.addEventListener('mouseenter', () => APOSTROPHE.innerText = 'Show help');
         HELP.addEventListener('mouseleave', () => APOSTROPHE.innerText = '');
+
+        // Link to options page.
+        OPTIONS.addEventListener('click', () => {
+            browser.runtime.openOptionsPage()
+                .then(() => console.info('INFO: Options page opened.'));
+        });
+        OPTIONS.addEventListener('mouseenter', () => APOSTROPHE.innerText = 'Open preferences');
+        OPTIONS.addEventListener('mouseleave', () => APOSTROPHE.innerText = '');
 
         // Confirmation button for the removal of bookmarks.
         MODAL_DELETE_CONFIRM.addEventListener('click', () => {
