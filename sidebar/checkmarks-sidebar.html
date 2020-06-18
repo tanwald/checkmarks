@@ -20,6 +20,7 @@
             <i id="options" class="material-icons button">settings</i>
         </div>
         <div id="progress"></div>
+        <div id="apostrophe"></div>
         <div id="progress-container">
             <div id="progress-bar"></div>
         </div>
@@ -34,8 +35,16 @@
 </div>
 <!-- MODAL -->
 <div id="modal">
-    <!-- MODAL WARNING -->
-    <div id="modal-warning" class="modal-content">
+    <!-- MODAL CANCEL -->
+    <div id="modal-cancel" class="modal-content">
+        <i class="material-icons icon error">warning</i>
+        <br>
+        <p>Do you really want to cancel/discard the current run?</p>
+        <i id="modal-cancel-confirm" class="material-icons icon button">check_circle</i>
+        <i id="modal-cancel-cancel" class="material-icons icon button">cancel</i>
+    </div>
+    <!-- MODAL DELETE -->
+    <div id="modal-delete" class="modal-content">
         <i class="material-icons icon error">warning</i>
         <br><br>
         <b>Warning</b>
@@ -43,8 +52,8 @@
         <p>Clicking the trash icon permanently removes the corresponding entry from your bookmarks.</p>
         <p>After the confirmation of the first removal this warning will not appear again.</p>
         <br>
-        <i id="modal-warning-confirm" class="material-icons icon button">check_circle</i>
-        <i id="modal-warning-cancel" class="material-icons icon button">cancel</i>
+        <i id="modal-delete-confirm" class="material-icons icon button">check_circle</i>
+        <i id="modal-delete-cancel" class="material-icons icon button">cancel</i>
     </div>
     <!-- MODAL HELP -->
     <div id="modal-help" class="modal-content">

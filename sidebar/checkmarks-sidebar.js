@@ -72,6 +72,7 @@ function CheckmarksSidebar() {
     const CANCEL = document.getElementById('cancel');
     const OPTIONS = document.getElementById('options');
     const HELP = document.getElementById('help');
+    const APOSTROPHE = document.getElementById('apostrophe');
     const PROGRESS = document.getElementById('progress');
     const PROGRESS_BAR = document.getElementById('progress-bar');
     const STATISTICS = document.getElementById('statistics');
@@ -81,9 +82,12 @@ function CheckmarksSidebar() {
     const FAVICONS = document.getElementById('favicons');
     const MESSAGES = document.getElementById('messages');
     const MODAL = document.getElementById('modal');
-    const MODAL_WARNING = document.getElementById('modal-warning');
-    const MODAL_WARNING_CONFIRM = document.getElementById('modal-warning-confirm');
-    const MODAL_WARNING_CANCEL = document.getElementById('modal-warning-cancel');
+    const MODAL_CANCEL = document.getElementById('modal-cancel');
+    const MODAL_CANCEL_CONFIRM = document.getElementById('modal-cancel-confirm');
+    const MODAL_CANCEL_CANCEL = document.getElementById('modal-cancel-cancel');
+    const MODAL_DELETE = document.getElementById('modal-delete');
+    const MODAL_DELETE_CONFIRM = document.getElementById('modal-delete-confirm');
+    const MODAL_DELETE_CANCEL = document.getElementById('modal-delete-cancel');
     const MODAL_HELP = document.getElementById('modal-help');
 
     const POST_LOAD_TIMEOUT = 2000;
@@ -102,6 +106,7 @@ function CheckmarksSidebar() {
     let bookmarksProcessed = {};
     let bookmarksTotal = 0;
     let paused = false;
+    let restored = false;
 
     let urls = {};
     let tabCount = 0;
@@ -118,17 +123,37 @@ function CheckmarksSidebar() {
         restoreRun();
         // Start button that initializes the chain of events.
         START.addEventListener('click', start);
+        START.addEventListener('mouseenter', () => APOSTROPHE.innerText = 'Run checkmarks');
+        START.addEventListener('mouseleave', () => APOSTROPHE.innerText = '');
 
         // Pause button that pauses the chain of events.
         PAUSE.addEventListener('click', pause);
+        PAUSE.addEventListener('mouseenter', () => APOSTROPHE.innerText = 'Pause run');
+        PAUSE.addEventListener('mouseleave', () => APOSTROPHE.innerText = '');
 
         // Cancel button that interrupts the chain of events.
         CANCEL.addEventListener('click', () => {
+            MODAL.style.display = 'block';
+            MODAL_CANCEL.style.display = 'block';
+        });
+        CANCEL.addEventListener('mouseenter', () => APOSTROPHE.innerText = 'Cancel/discard run');
+        CANCEL.addEventListener('mouseleave', () => APOSTROPHE.innerText = '');
+
+        // Confirmation button for canceling a run.
+        MODAL_CANCEL_CONFIRM.addEventListener('click', () => {
             PAUSE.style.display = 'none';
             CANCEL.style.display = 'none';
+            MODAL.style.display = 'none';
+            MODAL_CANCEL.style.display = 'none';
             paused = false;
             cancel();
             reset();
+        });
+
+        // Hides warning modal without confirmation.
+        MODAL_CANCEL_CANCEL.addEventListener('click', () => {
+            MODAL.style.display = 'none';
+            MODAL_CANCEL.style.display = 'none';
         });
 
         // Link to options page.
@@ -136,30 +161,38 @@ function CheckmarksSidebar() {
             browser.runtime.openOptionsPage()
                 .then(() => console.info('INFO: Options page opened.'));
         });
+        OPTIONS.addEventListener('mouseenter', () => APOSTROPHE.innerText = 'Open preferences');
+        OPTIONS.addEventListener('mouseleave', () => APOSTROPHE.innerText = '');
 
         // Open help modal.
         HELP.addEventListener('click', () => {
             MODAL.style.display = 'block';
             MODAL_HELP.style.display = 'block';
-            MODAL_WARNING.style.display = 'none';
         });
+        HELP.addEventListener('mouseenter', () => APOSTROPHE.innerText = 'Show help');
+        HELP.addEventListener('mouseleave', () => APOSTROPHE.innerText = '');
 
         // Confirmation button for the removal of bookmarks.
-        MODAL_WARNING_CONFIRM.addEventListener('click', () => {
+        MODAL_DELETE_CONFIRM.addEventListener('click', () => {
             removeBookmark(modalBookmarkId, true);
             MODAL.style.display = 'none';
+            MODAL_DELETE.style.display = 'none';
             removalConfirmed = true;
         });
 
-        // Hides waring modal without confirmation.
-        MODAL_WARNING_CANCEL.addEventListener('click', () => {
+        // Hides warning modal without confirmation.
+        MODAL_DELETE_CANCEL.addEventListener('click', () => {
             MODAL.style.display = 'none';
+            MODAL_DELETE.style.display = 'none';
         });
 
         // Hides modals when the user clicks somewhere else.
         window.addEventListener('click', (event) => {
             if (event.target === MODAL) {
                 MODAL.style.display = 'none';
+                MODAL_CANCEL.style.display = 'none';
+                MODAL_HELP.style.display = 'none';
+                MODAL_DELETE.style.display = 'none';
             }
         });
 
@@ -228,6 +261,7 @@ function CheckmarksSidebar() {
      */
     let resetState = function () {
         paused = false;
+        restored = false;
         urls = {};
         tabCount = 0;
         tabRegistry = {};
@@ -241,8 +275,8 @@ function CheckmarksSidebar() {
     let resetBookmarks = function () {
         bookmarks = [];
         bookmarksIgnored = [];
-        // Keep information for restored (bookmarksTotal = 0) or resumed (paused) runs!
-        if (bookmarksTotal > 0 && !paused) {
+        // Keep information for restored or resumed runs!
+        if (!paused && !restored) {
             errors = [];
             bookmarksProcessed = {};
         }
@@ -694,7 +728,7 @@ function CheckmarksSidebar() {
         const message = document.createElement('div');
         message.className = 'message';
         message.append(createActionIcons(bookmark));
-        message.append(createIcon('folder_open', '', 'folder: ' + bookmark.path));
+        message.append(createIcon('folder_open', '', '/' + bookmark.path));
         message.append(createIcon(ERROR_TYPE_TO_ICON[error], 'error', error.replace(/_/g, ' ')));
         message.append(document.createTextNode(bookmark.title.toLowerCase()));
 
@@ -738,7 +772,7 @@ function CheckmarksSidebar() {
             } else {
                 modalBookmarkId = bookmark.id;
                 MODAL.style.display = 'block';
-                MODAL_WARNING.style.display = 'block';
+                MODAL_DELETE.style.display = 'block';
                 MODAL_HELP.style.display = 'none';
             }
         });
@@ -904,17 +938,19 @@ function CheckmarksSidebar() {
     };
 
     /**
-     * Stores errors and processed bookmarks in local storage.
+     * Stores run bookmarks in local storage.
      */
     let storeRun = function () {
         browser.storage.local.set({
+            total: bookmarksTotal,
+            ignored: bookmarksIgnored,
             processed: bookmarksProcessed,
             errors: errors
         }).then(() => console.info('INFO: Stored run in local storage.'));
     }
 
     /**
-     * Restores errors and processed bookmarks from local storage - if available.
+     * Restores run from local storage - if available.
      */
     let restoreRun = function () {
         browser.storage.local.get()
@@ -923,11 +959,15 @@ function CheckmarksSidebar() {
                     console.debug('DEBUG: Restoring run...');
                     console.debug(storage.processed, storage.errors);
 
-                    CANCEL.style.display = 'inline';
+                    restored = true;
 
+                    CANCEL.style.display = 'inline';
+                    bookmarksTotal = storage.total;
+                    bookmarksIgnored = storage.ignored;
                     bookmarksProcessed = storage.processed;
                     createPlaceholder();
                     createList(storage.errors);
+                    setProgress();
                 }
             });
     }
