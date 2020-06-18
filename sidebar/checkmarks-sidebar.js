@@ -164,6 +164,11 @@ function CheckmarksSidebar() {
         HELP.addEventListener('mouseenter', () => APOSTROPHE.innerText = 'Show help');
         HELP.addEventListener('mouseleave', () => APOSTROPHE.innerText = '');
 
+        MODAL_HELP.addEventListener('click', () => {
+            MODAL.style.display = 'none';
+            MODAL_HELP.style.display = 'none';
+        });
+
         // Link to options page.
         OPTIONS.addEventListener('click', () => {
             browser.runtime.openOptionsPage()
