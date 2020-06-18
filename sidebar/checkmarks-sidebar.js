@@ -85,10 +85,10 @@ function CheckmarksSidebar() {
     const MODAL_CANCEL = document.getElementById('modal-cancel');
     const MODAL_CANCEL_CONFIRM = document.getElementById('modal-cancel-confirm');
     const MODAL_CANCEL_CANCEL = document.getElementById('modal-cancel-cancel');
+    const MODAL_HELP = document.getElementById('modal-help');
     const MODAL_DELETE = document.getElementById('modal-delete');
     const MODAL_DELETE_CONFIRM = document.getElementById('modal-delete-confirm');
     const MODAL_DELETE_CANCEL = document.getElementById('modal-delete-cancel');
-    const MODAL_HELP = document.getElementById('modal-help');
 
     const POST_LOAD_TIMEOUT = 2000;
     const MIN_WINDOW_WIDTH = 220; // ...to display duration/progress %
