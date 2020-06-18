@@ -53,8 +53,9 @@ function CheckmarksOptions() {
      * Restores options from local storage or sets default values.
      */
     let restoreOptions = function () {
-        browser.storage.local.get('options')
-            .then((options) => {
+        browser.storage.local.get()
+            .then((storage) => {
+                const options = storage.options || {};
                 requestTimeoutInput.value = options.requestTimeout || CM_DEFAULTS.getTimeout();
                 timeoutOverruleInput.value = options.timeoutOverrule || CM_DEFAULTS.getTimeoutOverrule();
                 maxTabsInput.value = options.maxTabs || CM_DEFAULTS.getMaxTabs();
