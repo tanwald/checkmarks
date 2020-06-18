@@ -80,6 +80,7 @@ function CheckmarksSidebar() {
     const STATISTICS_IGNORED = document.getElementById('statistics-ignored');
     const STATISTICS_ERRORS = document.getElementById('statistics-errors');
     const FAVICONS = document.getElementById('favicons');
+    const FILTER = document.getElementById('filter');
     const MESSAGES = document.getElementById('messages');
     const MODAL = document.getElementById('modal');
     const MODAL_CANCEL = document.getElementById('modal-cancel');
@@ -92,13 +93,15 @@ function CheckmarksSidebar() {
 
     const POST_LOAD_TIMEOUT = 2000;
     const MIN_WINDOW_WIDTH = 220; // ...to display duration/progress %
-    const MESSAGES_MARGIN_TOP = '80px';
-    const MESSAGES_MARGIN_TOP_FAVICON_BAR = '120px';
+    const MESSAGES_MARGIN_TOP = '130px';
+    const MESSAGES_MARGIN_TOP_FAVICON_BAR = '170px';
 
     let startTime;
     let hostWindowId;
     let modalBookmarkId;
     let removalConfirmed = false;
+
+    let filters = [];
 
     let errors = [];
     let bookmarks = [];
@@ -120,10 +123,11 @@ function CheckmarksSidebar() {
     this.init = function () {
         console.debug('DEBUG: Initializing...');
         setIcon();
+        setFilters();
         restoreRun();
         // Start button that initializes the chain of events.
         START.addEventListener('click', start);
-        START.addEventListener('mouseenter', () => APOSTROPHE.innerText = 'Run checkmarks');
+        START.addEventListener('mouseenter', () => APOSTROPHE.innerText = 'Start/Resume');
         START.addEventListener('mouseleave', () => APOSTROPHE.innerText = '');
 
         // Pause button that pauses the chain of events.
@@ -263,6 +267,36 @@ function CheckmarksSidebar() {
     };
 
     /**
+     * Creates the UI for filtering errors.
+     */
+    let setFilters = function () {
+        const seen = [];
+        Object.entries(ERROR_TYPE_TO_ICON).forEach((entry) => {
+            const error = entry[1];
+
+            if (!seen.includes(error)) {
+                seen.push(error);
+                let filterButton = createIcon(error, 'error', '');
+                filterButton.classList.add('button');
+
+                filterButton.addEventListener('click', () => {
+                    if (filterButton.classList.contains('error')) {
+                        filterButton.classList.remove('error');
+                        filters.push(error);
+                    } else {
+                        filterButton.classList.add('error');
+                        filters = filters.filter((filter) => filter !== error);
+                    }
+
+                    createList(errors, false);
+                });
+
+                FILTER.append(filterButton);
+            }
+        });
+    };
+
+    /**
      * Resets almost all state members to their initial state.
      */
     let resetState = function () {
@@ -300,6 +334,7 @@ function CheckmarksSidebar() {
         STATISTICS.style.display = 'none';
         FAVICONS.style.display = 'none';
         FAVICONS.innerHTML = '';
+        FILTER.style.display = 'none';
         MESSAGES.style.marginTop = MESSAGES_MARGIN_TOP;
     };
 
@@ -458,6 +493,7 @@ function CheckmarksSidebar() {
         // Collect bookmark-information
         walk(tree[0], '/');
 
+        FILTER.style.display = 'block';
         setStatistics();
         setProgress();
         registerListeners();
@@ -727,20 +763,7 @@ function CheckmarksSidebar() {
             error: error
         });
 
-        const messageContainer = document.createElement('div');
-        messageContainer.id = bookmark.id;
-        messageContainer.className = 'message-container';
-
-        const message = document.createElement('div');
-        message.className = 'message';
-        message.append(createActionIcons(bookmark));
-        message.append(createIcon('folder_open', '', '/' + bookmark.path));
-        message.append(createIcon(ERROR_TYPE_TO_ICON[error], 'error', error.replace(/_/g, ' ')));
-        message.append(document.createTextNode(bookmark.title.toLowerCase()));
-
-        messageContainer.append(message);
-
-        MESSAGES.append(messageContainer);
+        createListEntry(bookmark, error);
         setStatistics();
     };
 
@@ -756,11 +779,44 @@ function CheckmarksSidebar() {
     /**
      * Creates the error list from existing errors.
      * @param existingErrors Error storage to use
+     * @param report Add error to the internal list of errors.
      */
-    let createList = function (existingErrors) {
+    let createList = function (existingErrors, report) {
+        MESSAGES.innerHTML = '';
+        createPlaceholder();
+
         existingErrors.forEach((error) => {
-            reportError(error.bookmark, error.error);
+            const errorFlag = ERROR_TYPE_TO_ICON[error.error];
+            if (!filters.includes(errorFlag)) {
+                if (report) {
+                    reportError(error.bookmark, error.error);
+                } else {
+                    createListEntry(error.bookmark, error.error);
+                }
+            }
         });
+    };
+
+    /**
+     * Creates an entry for the given error.
+     * @param bookmark {browser.bookmarks.BookmarkTreeNode} Invalid bookmark.
+     * @param error {string} Type of error.
+     */
+    let createListEntry = function (bookmark, error) {
+        const messageContainer = document.createElement('div');
+        messageContainer.id = bookmark.id;
+        messageContainer.className = 'message-container';
+
+        const message = document.createElement('div');
+        message.className = 'message';
+        message.append(createActionIcons(bookmark));
+        message.append(createIcon('folder_open', '', '/' + bookmark.path));
+        message.append(createIcon(ERROR_TYPE_TO_ICON[error], 'error', error.replace(/_/g, ' ')));
+        message.append(document.createTextNode(bookmark.title.toLowerCase()));
+
+        messageContainer.append(message);
+
+        MESSAGES.append(messageContainer);
     };
 
     /**
@@ -968,11 +1024,11 @@ function CheckmarksSidebar() {
                     restored = true;
 
                     CANCEL.style.display = 'inline';
+                    FILTER.style.display = 'block';
                     bookmarksTotal = storage.total;
                     bookmarksIgnored = storage.ignored;
                     bookmarksProcessed = storage.processed;
-                    createPlaceholder();
-                    createList(storage.errors);
+                    createList(storage.errors, true);
                     setProgress();
                 }
             });

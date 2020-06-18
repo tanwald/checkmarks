@@ -27,8 +27,8 @@ header {
     position: absolute;
     z-index: 2;
     top: 0;
-    height: 60px;
-    line-height: 60px;
+    height: 70px;
+    line-height: 70px;
 }
 
 #controls {
@@ -44,16 +44,24 @@ header {
 #apostrophe {
     position: absolute;
     z-index: 2;
-    top: 3px;
-    right: 3px;
+    top: 5px;
+    left: 20px;
     font-size: 10px;
+}
+
+@media (prefers-color-scheme: dark) {
+    #controls,
+    #progress,
+    #apostrophe {
+        color: #fff;
+    }
 }
 
 /**********************************************************************************************************************
  * PROGRESS BAR
  **********************************************************************************************************************/
 #progress-container {
-    height: 60px;
+    height: 70px;
     width: 100%;
     border-bottom: 1px solid #A9A59F;
     background-color: rgba(241, 242, 242, .9);
@@ -72,9 +80,11 @@ header {
 }
 
 /**********************************************************************************************************************
- * STATISTICS
+ * STATISTICS/FILTER
  **********************************************************************************************************************/
-#statistics {
+#statistics,
+#filter {
+    display: none;
     overflow: hidden;
     white-space: nowrap;
     text-overflow: ellipsis;
@@ -83,11 +93,11 @@ header {
     padding: 0 20px;
     line-height: 40px;
     font-size: 12px;
-    display: none;
 }
 
 @media (prefers-color-scheme: dark) {
-    #statistics {
+    #statistics,
+    #filter {
         background-color: #2d2d2d;
     }
 }
@@ -104,6 +114,7 @@ header {
     border-bottom: 1px solid #A9A59F;
     background-color: rgba(255, 255, 255, .9);
 }
+
 
 @media (prefers-color-scheme: dark) {
     #favicons {
@@ -246,7 +257,7 @@ header {
     overflow: hidden;
     border-collapse: collapse;
     width: 100%;
-    margin-top: 80px;
+    margin-top: 130px;
 }
 
 .message-container {
