@@ -929,9 +929,8 @@ function CheckmarksSidebar() {
      * Updates progress information.
      */
     let setProgress = function () {
-        const processedCount = Object.keys(bookmarksProcessed).length + bookmarksIgnored.length;
-        console.debug(`DEBUG: Processed: ${processedCount}/${bookmarksTotal}`);
-        const percent = Math.round(processedCount / bookmarksTotal * 100) + '%';
+        const processedCount = Object.keys(bookmarksProcessed).length;
+        const percent = Math.round(processedCount / (bookmarksTotal - bookmarksIgnored.length) * 100) + '%';
         PROGRESS_BAR.style.width = percent;
         if (window.innerWidth > MIN_WINDOW_WIDTH) {
             PROGRESS.innerText = percent;
