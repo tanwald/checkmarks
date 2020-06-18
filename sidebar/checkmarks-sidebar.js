@@ -75,6 +75,9 @@ function CheckmarksSidebar() {
     const PROGRESS = document.getElementById('progress');
     const PROGRESS_BAR = document.getElementById('progress-bar');
     const STATISTICS = document.getElementById('statistics');
+    const STATISTICS_TOTAL = document.getElementById('statistics-total');
+    const STATISTICS_IGNORED = document.getElementById('statistics-ignored');
+    const STATISTICS_ERRORS = document.getElementById('statistics-errors');
     const FAVICONS = document.getElementById('favicons');
     const MESSAGES = document.getElementById('messages');
     const MODAL = document.getElementById('modal');
@@ -416,6 +419,7 @@ function CheckmarksSidebar() {
         walk(tree[0], '/');
 
         setStatistics();
+        setProgress();
         registerListeners();
 
         browser.windows.getCurrent()
@@ -843,9 +847,9 @@ function CheckmarksSidebar() {
      */
     let setStatistics = function () {
         STATISTICS.style.display = 'block';
-        STATISTICS.innerHTML = '<b>Total:</b> ' + bookmarksTotal
-            + ' <b>Ignored:</b> ' + bookmarksIgnored.length
-            + ' <b>Problems:</b> ' + errors.length;
+        STATISTICS_TOTAL.innerText = bookmarksTotal;
+        STATISTICS_IGNORED.innerText = bookmarksIgnored.length + '';
+        STATISTICS_ERRORS.innerText = errors.length + '';
     };
 
     /**
