@@ -164,6 +164,7 @@ function CheckmarksSidebar() {
         HELP.addEventListener('mouseenter', () => APOSTROPHE.innerText = 'Show help');
         HELP.addEventListener('mouseleave', () => APOSTROPHE.innerText = '');
 
+        // Close help modal.
         MODAL_HELP.addEventListener('click', () => {
             MODAL.style.display = 'none';
             MODAL_HELP.style.display = 'none';
