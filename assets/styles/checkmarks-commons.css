@@ -6,7 +6,7 @@ html, body {
     margin: 0;
     font-family: sans-serif;
     font-size: 14px;
-    color: #4E4947;
+    color: #4e4947;
 }
 
 @media (prefers-color-scheme: dark) {

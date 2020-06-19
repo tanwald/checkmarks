@@ -5,17 +5,15 @@ body {
     margin: 5px;
 }
 
-h1 {
-    font-size: 21px;
-}
-
-h1 > i {
-    vertical-align: bottom;
-}
-
 @media (prefers-color-scheme: dark) {
     body {
         background-color: #202023;
+    }
+}
+
+@media (prefers-color-scheme: dark) {
+    h1 {
+        color: #f9f9fa;
     }
 }
 

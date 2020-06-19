@@ -80,7 +80,7 @@ function CheckmarksSidebar() {
     const STATISTICS_IGNORED = document.getElementById('statistics-ignored');
     const STATISTICS_ERRORS = document.getElementById('statistics-errors');
     const FAVICONS = document.getElementById('favicons');
-    const FILTER = document.getElementById('filter');
+    const FILTERS = document.getElementById('filters');
     const MESSAGES = document.getElementById('messages');
     const MODAL = document.getElementById('modal');
     const MODAL_CANCEL = document.getElementById('modal-cancel');
@@ -113,7 +113,7 @@ function CheckmarksSidebar() {
 
     let urls = {};
     let tabCount = 0;
-    let tabRegistry = {}; // tabId => bookmark, tabIdcomplete => true/false
+    let tabRegistry = {}; // tabId => bookmark, tabIdComplete => true/false
     let tabRequestMap = {}; // tabId => requestCount, tabUrl => error
     let timeoutIds = [];
 
@@ -226,7 +226,7 @@ function CheckmarksSidebar() {
                 16: '/assets/images/icon-dark.svg',
                 32: '/assets/images/icon-dark.svg'
             }
-        });
+        }).then(() => console.info('INFO: Icon set.'));
     };
 
     /**
@@ -267,33 +267,54 @@ function CheckmarksSidebar() {
     };
 
     /**
+     * Activates or deactivates filters for the given errors and sets button style accordingly.
+     * @param button Button that toggles the filter.
+     * @param error Type of error that should be filtered or not.
+     */
+    let toggleFilter = function (button, error) {
+        if (button.classList.contains('error')) {
+            button.classList.remove('error');
+            filters.push(error);
+        } else {
+            button.classList.add('error');
+            filters = filters.filter((filter) => filter !== error);
+        }
+    }
+
+    /**
      * Creates the UI for filtering errors.
      */
     let setFilters = function () {
         const seen = [];
+        const filterButtons = [];
         Object.entries(ERROR_TYPE_TO_ICON).forEach((entry) => {
             const error = entry[1];
 
             if (!seen.includes(error)) {
                 seen.push(error);
-                let filterButton = createIcon(error, 'error', '');
+                const filterButton = createIcon(error, 'error', '');
                 filterButton.classList.add('button');
 
                 filterButton.addEventListener('click', () => {
-                    if (filterButton.classList.contains('error')) {
-                        filterButton.classList.remove('error');
-                        filters.push(error);
-                    } else {
-                        filterButton.classList.add('error');
-                        filters = filters.filter((filter) => filter !== error);
-                    }
-
-                    createList(errors, false);
+                    toggleFilter(filterButton, error);
+                    createList(errors, true);
                 });
 
-                FILTER.append(filterButton);
+                FILTERS.append(filterButton);
+                filterButtons.push(filterButton);
             }
         });
+
+        const toggleButton = document.createElement('a');
+        toggleButton.append(document.createTextNode('| toggle'));
+        toggleButton.classList.add('button');
+        toggleButton.addEventListener('click', () => {
+            filterButtons.forEach((button) => {
+                toggleFilter(button, button.innerText);
+                createList(errors, true);
+            });
+        });
+        FILTERS.append(toggleButton);
     };
 
     /**
@@ -334,7 +355,7 @@ function CheckmarksSidebar() {
         STATISTICS.style.display = 'none';
         FAVICONS.style.display = 'none';
         FAVICONS.innerHTML = '';
-        FILTER.style.display = 'none';
+        FILTERS.style.display = 'none';
         MESSAGES.style.marginTop = MESSAGES_MARGIN_TOP;
     };
 
@@ -422,8 +443,8 @@ function CheckmarksSidebar() {
      */
     let pause = function () {
         paused = true;
-        cancel();
         PAUSE.style.display = 'none';
+        cancel();
         storeRun();
     };
 
@@ -438,7 +459,7 @@ function CheckmarksSidebar() {
         });
 
         Object.keys(tabRegistry).forEach((id) => {
-            if (!id.endsWith('complete')) {
+            if (!id.endsWith('Complete')) {
                 browser.tabs.remove(parseInt(id));
             }
         });
@@ -493,7 +514,7 @@ function CheckmarksSidebar() {
         // Collect bookmark-information
         walk(tree[0], '/');
 
-        FILTER.style.display = 'block';
+        FILTERS.style.display = 'block';
         setStatistics();
         setProgress();
         registerListeners();
@@ -619,7 +640,7 @@ function CheckmarksSidebar() {
             } else {
                 browser.tabs.get(details.tabId)
                     .then((tab) => {
-                        const tabCompleteKey = tab.id + 'complete';
+                        const tabCompleteKey = tab.id + 'Complete';
                         if (tab.status === 'complete' && !(tabCompleteKey in tabRegistry)) {
                             // Sometimes a tab reports "status complete" twice?
                             tabRegistry[tabCompleteKey] = true;
@@ -689,7 +710,7 @@ function CheckmarksSidebar() {
      * @param tab {tabs.Tab} that timed out.
      */
     let onTimeout = function (tab) {
-        const tabCompleteKey = tab.id + 'complete';
+        const tabCompleteKey = tab.id + 'Complete';
         if (tab.id in tabRegistry && !(tabCompleteKey in tabRegistry)) {
             if (!(tab.id in tabRequestMap && tabRequestMap[tab.id] > TIMEOUT_OVERRULE)) {
                 handleError(tab.id, ERROR_TIMEOUT);
@@ -763,7 +784,9 @@ function CheckmarksSidebar() {
             error: error
         });
 
-        createListEntry(bookmark, error);
+        if (!filters.includes(ERROR_TYPE_TO_ICON[error])) {
+            createListEntry(bookmark, error);
+        }
         setStatistics();
     };
 
@@ -779,19 +802,19 @@ function CheckmarksSidebar() {
     /**
      * Creates the error list from existing errors.
      * @param existingErrors Error storage to use
-     * @param report Add error to the internal list of errors.
+     * @param uiOnly If set to true the error is not added to the internal list of errors. Filters are applied to the
+     * UI only.
      */
-    let createList = function (existingErrors, report) {
+    let createList = function (existingErrors, uiOnly) {
         MESSAGES.innerHTML = '';
         createPlaceholder();
 
         existingErrors.forEach((error) => {
-            const errorFlag = ERROR_TYPE_TO_ICON[error.error];
-            if (!filters.includes(errorFlag)) {
-                if (report) {
-                    reportError(error.bookmark, error.error);
-                } else {
+            if (!filters.includes(ERROR_TYPE_TO_ICON[error.error])) {
+                if (uiOnly) {
                     createListEntry(error.bookmark, error.error);
+                } else {
+                    reportError(error.bookmark, error.error);
                 }
             }
         });
@@ -840,7 +863,7 @@ function CheckmarksSidebar() {
         });
         actionContainer.append(deleteFromBookmarksIcon);
 
-        const deleteFromListIcon = createIcon('check_circle', 'button', 'checked: remove from list');
+        const deleteFromListIcon = createIcon('check_circle', 'button', 'checked; remove from list');
         deleteFromListIcon.addEventListener('click', () => {
             removeBookmark(bookmark.id, false);
         });
@@ -1021,14 +1044,17 @@ function CheckmarksSidebar() {
                     console.debug(storage.processed, storage.errors);
 
                     restored = true;
-
-                    CANCEL.style.display = 'inline';
-                    FILTER.style.display = 'block';
                     bookmarksTotal = storage.total;
                     bookmarksIgnored = storage.ignored;
                     bookmarksProcessed = storage.processed;
-                    createList(storage.errors, true);
+
+                    CANCEL.style.display = 'inline';
+                    STATISTICS.style.display = 'block';
+                    FILTERS.style.display = 'block';
+
+                    createList(storage.errors, false);
                     setProgress();
+                    setStatistics();
                 }
             });
     }

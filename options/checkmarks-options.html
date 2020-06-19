@@ -9,37 +9,19 @@
 </head>
 
 <body>
-<h1><i class="material-icons icon">info</i> Information</h1>
-<p>
-    Checkmarks scans your imported, synced or just dispensable bookmarks for invalid entries.
-    It batch-loads your favorites into a configurable number of tabs and triggers the native mechanism of loading
-    favicons.
-</p>
-<p>
-    A list of request errors offers the opportunity to manually review the corresponding bookmarks and to update or
-    remove them if they are broken.
-</p>
-<p>
-    WebExtensions <b>cannot delete invalid favicons</b>.
-    You have to manually delete favicons.sqlite in your profile folder first.
-</p>
-<p>
-    Be aware that continuously loading tabs in parallel consumes a considerable amount of resources!
-</p>
-<h1><i class="material-icons icon">settings</i> Preferences</h1>
 <label>
-    <b>Request timeout in seconds:</b><br><br>
+    Request timeout in seconds:<br><br>
     <input type="number" id="request-timeout" min="1">
 </label>
 <label>
-    <b>Number of successful sub-requests to consider a timed out bookmark okay:</b><br>
+    Number of successful sub-requests to consider a timed out bookmark okay:<br>
     <small>
         (Some pages won't complete loading because of unresponsive external resources.)<br><br>
     </small>
     <input type="number" id="timeout-overrule" min="1"><br>
 </label>
 <label>
-    <b>Maximum number of tabs:</b><br>
+    Maximum number of tabs:<br>
     <small>
         (Adjust request timeout accordingly! Continuously loading tabs in parallel consumes a considerable amount of
         resources.)<br><br>
@@ -47,7 +29,7 @@
     <input type="number" id="max-tabs" min="1"><br>
 </label>
 <label>
-    <b>Ignored directories contain:</b><br>
+    Ignored directories contain:<br>
     <small>
         (Use paths like "path/to/archive" to be more specific! Path-matching is not case-sensitive.)<br><br>
     </small>
@@ -55,7 +37,7 @@
     <label>active: <input type="checkbox" id="ignored-dirs-active"></label>
 </label>
 <label>
-    <b>Included directories contain:</b><br>
+    Included directories contain:<br>
     <small>
         (All other directories will be ignored. Ignored directories and urls within indcluded directories remain
         ignored.)<br><br>
@@ -64,16 +46,16 @@
     <label>active: <input type="checkbox" id="included-dirs-active"></label>
 </label>
 <label>
-    <b>Ignored URLs contain:</b><br>
+    Ignored URLs contain:<br>
     <small>
         (Not case-sensitive.)<br><br>
     </small>
     <input type="text" id="ignored-urls"><br><br>
     <label>active: <input type="checkbox" id="ignored-urls-active"></label>
 </label>
-<label><input type="checkbox" id="show-favicons"> <b>Show recently loaded favicons while running</b></label>
-<label><input type="checkbox" id="to-lowercase"> <b>Reformat bookmark titles to lowercase</b></label>
-<label><input type="checkbox" id="clear-cache"> <b>Clear cache before each run</b></label>
+<label><input type="checkbox" id="show-favicons"> Show recently loaded favicons while running</label>
+<label><input type="checkbox" id="to-lowercase"> Reformat bookmark titles to lowercase</label>
+<label><input type="checkbox" id="clear-cache"> Clear cache before each run</label>
 <script src="../commons/checkmarks-commons.js"></script>
 <script src="checkmarks-options.js"></script>
 </body>
