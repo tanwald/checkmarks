@@ -342,6 +342,7 @@ function CheckmarksSidebar() {
     let resetBookmarks = function () {
         bookmarks = [];
         bookmarksIgnored = [];
+        folders = {};
         // Keep information for restored or resumed runs!
         if (!paused && !restored) {
             errors = [];
