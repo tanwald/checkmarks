@@ -21,6 +21,24 @@ label {
     margin-bottom: 40px;
 }
 
+input {
+    color: #4e4947;
+    padding: 5px;
+    border: 1px solid #b1b1b3;
+}
+
+input:focus {
+    border: 1px solid #0a84ff;
+}
+
+@media (prefers-color-scheme: dark) {
+    input {
+        color: #f9f9fa;
+        border: 1px solid #4c4c4e;
+        background-color: #202023;
+    }
+}
+
 /**********************************************************************************************************************
  * INPUT NUMBERS
  **********************************************************************************************************************/
@@ -32,7 +50,7 @@ input[type="number"] {
  * INPUT TEXT
  **********************************************************************************************************************/
 input[type="text"] {
-    width: 42%;
+    width: 100%;
     margin-top: 4px;
 }
 
