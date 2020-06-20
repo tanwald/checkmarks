@@ -16,6 +16,8 @@ function CheckmarksSidebar() {
     let IGNORED_URLS_ACTIVE = CM_DEFAULTS.getIgnoredUrlsActive();
     let SHOW_FAVICONS = CM_DEFAULTS.getShowFavicons();
     let TO_LOWERCASE = CM_DEFAULTS.getToLowercase();
+    let DO_SORT = CM_DEFAULTS.doSort();
+    let SORT_UNFILED_BY_DATE = CM_DEFAULTS.sortUnfiledByDate();
     let CLEAR_CACHE = CM_DEFAULTS.getClearCache();
 
     // Constants for error-mapping and tooltips.
@@ -105,6 +107,7 @@ function CheckmarksSidebar() {
 
     let errors = [];
     let bookmarks = [];
+    let folders = {};
     let bookmarksIgnored = [];
     let bookmarksProcessed = {};
     let bookmarksTotal = 0;
@@ -251,6 +254,9 @@ function CheckmarksSidebar() {
             options.ignoredUrlsActive : IGNORED_URLS_ACTIVE;
         SHOW_FAVICONS = typeof options.showFavicons !== 'undefined' ? options.showFavicons : SHOW_FAVICONS;
         TO_LOWERCASE = typeof options.toLowercase !== 'undefined' ? options.toLowercase : TO_LOWERCASE;
+        DO_SORT = typeof options.doSort !== 'undefined' ? options.doSort : DO_SORT;
+        SORT_UNFILED_BY_DATE = typeof options.sortUnfiledByDate !== 'undefined' ?
+            options.sortUnfiledByDate : SORT_UNFILED_BY_DATE;
         CLEAR_CACHE = typeof options.clearCache !== 'undefined' ? options.clearCache : CLEAR_CACHE;
     };
 
@@ -268,8 +274,8 @@ function CheckmarksSidebar() {
 
     /**
      * Activates or deactivates filters for the given errors and sets button style accordingly.
-     * @param button Button that toggles the filter.
-     * @param error Type of error that should be filtered or not.
+     * @param button {HTMLElement} Button that toggles the filter.
+     * @param error {boolean} Type of error that should be filtered or not.
      */
     let toggleFilter = function (button, error) {
         if (button.classList.contains('error')) {
@@ -514,6 +520,11 @@ function CheckmarksSidebar() {
         // Collect bookmark-information
         walk(tree[0], '/');
 
+        if (DO_SORT) {
+            console.info(`INFO: Sorting... Unfiled by date: ${SORT_UNFILED_BY_DATE}`);
+            sort();
+        }
+
         FILTERS.style.display = 'block';
         setStatistics();
         setProgress();
@@ -538,6 +549,14 @@ function CheckmarksSidebar() {
      * @param path {string} Path to the currently processed bookmark-folder.
      */
     let walk = function (treeItem, path) {
+        if (DO_SORT && treeItem.parentId && treeItem.parentId !== 'root________' && (treeItem.url || treeItem.children)) {
+            if (!(treeItem.parentId in folders)) {
+                folders[treeItem.parentId] = [treeItem];
+            } else {
+                folders[treeItem.parentId].push(treeItem);
+            }
+        }
+
         if (treeItem.url && treeItem.url.startsWith('http')) {
             bookmarksTotal++;
             if ((IGNORED_URLS_ACTIVE && isIgnored(treeItem.url, IGNORED_URLS)) ||
@@ -550,7 +569,9 @@ function CheckmarksSidebar() {
                 if (TO_LOWERCASE) {
                     browser.bookmarks.update(treeItem.id, {title: treeItem.title.toLowerCase()});
                 }
+
                 treeItem['path'] = path.replace(/(^\/\/|\/$)/g, '').toLowerCase();
+
                 if (treeItem.url in urls) {
                     // Bookmark is duplicated.
                     reportError(treeItem, ERROR_DUPLICATE);
@@ -567,6 +588,37 @@ function CheckmarksSidebar() {
                 walk(child, path + treeItem.title + '/');
             });
         }
+    };
+
+    /**
+     * Sort function that sorts alphanumeric and folders before bookmarks. Unfiled (other) bookmarks are sorted by date.
+     * @param a {browser.bookmarks.BookmarkTreeNode} Node for sorting.
+     * @param b {browser.bookmarks.BookmarkTreeNode} Node for sorting.
+     * @returns {number} Result for sorting.
+     */
+    let sortCompare = function (a, b) {
+        let result = 0;
+        if (a.children && !b.children) {
+            result = -1;
+        } else if (!a.children && b.children) {
+            result = 1;
+        } else if (SORT_UNFILED_BY_DATE && a.parentId === 'unfiled_____') {
+            result = a.dateAdded - b.dateAdded;
+        }
+
+        return result === 0 ? a.title.localeCompare(b.title) : result;
+    }
+
+    /**
+     * Sorts bookmarks by title.
+     */
+    let sort = function () {
+        Object.entries(folders).forEach((entry) => {
+            entry[1].sort(sortCompare).forEach((bookmark, index) => {
+                browser.bookmarks.move(bookmark.id, {parentId: bookmark.parentId, index: index});
+            })
+        });
+
     };
 
     /**
@@ -707,7 +759,7 @@ function CheckmarksSidebar() {
 
     /**
      * Removes a tab on timeout and decides if the bookmark is considered to be broken, based on successful requests.
-     * @param tab {tabs.Tab} that timed out.
+     * @param tab {browser.tabs.Tab} that timed out.
      */
     let onTimeout = function (tab) {
         const tabCompleteKey = tab.id + 'Complete';
@@ -726,7 +778,7 @@ function CheckmarksSidebar() {
 
     /**
      * Removes the successfully loaded tab and displays its favicon - if present.
-     * @param tab {tabs.Tab} Successfully loaded tab.
+     * @param tab {browser.tabs.Tab} Successfully loaded tab.
      */
     let handleSuccess = function (tab) {
         if (SHOW_FAVICONS && tab.favIconUrl) {
@@ -801,8 +853,9 @@ function CheckmarksSidebar() {
 
     /**
      * Creates the error list from existing errors.
-     * @param existingErrors Error storage to use
-     * @param uiOnly If set to true the error is not added to the internal list of errors. Filters are applied to the
+     * @param existingErrors {[{bookmark: browser.bookmarks.BookmarkTreeNode, error: string}]} Error storage to use
+     * @param uiOnly {boolean} If set to true the error is not added to the internal list of errors.
+     * Filters are applied to the
      * UI only.
      */
     let createList = function (existingErrors, uiOnly) {

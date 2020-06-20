@@ -15,6 +15,8 @@ function CheckmarksOptions() {
     const ignoredUrlsCheckbox = document.getElementById('ignored-urls-active');
     const showFaviconsCheckbox = document.getElementById('show-favicons');
     const toLowercaseCheckbox = document.getElementById('to-lowercase');
+    const doSort = document.getElementById('sort');
+    const sortUnfiledByDate = document.getElementById('sort-unfiled-by-date');
     const clearCacheCheckbox = document.getElementById('clear-cache');
 
     /**
@@ -44,6 +46,8 @@ function CheckmarksOptions() {
                 ignoredUrlsActive: ignoredUrlsCheckbox.checked,
                 showFavicons: showFaviconsCheckbox.checked,
                 toLowercase: toLowercaseCheckbox.checked,
+                doSort: doSort.checked,
+                sortUnfiledByDate: sortUnfiledByDate.checked,
                 clearCache: clearCacheCheckbox.checked
             }
         });
@@ -67,6 +71,8 @@ function CheckmarksOptions() {
                 ignoredUrlsCheckbox.checked = options.ignoredUrlsActive || CM_DEFAULTS.getIgnoredUrlsActive();
                 showFaviconsCheckbox.checked = options.showFavicons || CM_DEFAULTS.getShowFavicons();
                 toLowercaseCheckbox.checked = options.toLowercase || CM_DEFAULTS.getToLowercase();
+                doSort.checked = options.doSort || CM_DEFAULTS.doSort();
+                sortUnfiledByDate.checked = options.sortUnfiledByDate || CM_DEFAULTS.sortUnfiledByDate();
                 clearCacheCheckbox.checked = options.clearCache || CM_DEFAULTS.getClearCache();
             });
     };

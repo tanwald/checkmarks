@@ -1,8 +1,8 @@
 {
   "manifest_version": 2,
   "name": "Checkmarks",
-  "description": "Checks bookmarks and loads favicons.",
-  "version": "1.5.1",
+  "description": "Checks, formats, sorts bookmarks and loads favicons.",
+  "version": "1.6.0",
   "icons": {
     "48": "assets/images/logo.svg",
     "96": "assets/images/logo.svg"

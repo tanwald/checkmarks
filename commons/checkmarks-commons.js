@@ -14,6 +14,8 @@ function DefaultsStore() {
     const IGNORED_URLS_ACTIVE = true;
     const SHOW_FAVICONS = true;
     const TO_LOWERCASE = false;
+    const DO_SORT = false;
+    const SORT_UNFILED_BY_DATE = false;
     const CLEAR_CACHE = false;
 
     this.getTimeout = function () {
@@ -58,6 +60,14 @@ function DefaultsStore() {
 
     this.getToLowercase = function () {
         return TO_LOWERCASE;
+    };
+
+    this.doSort = function () {
+        return DO_SORT;
+    };
+
+    this.sortUnfiledByDate = function () {
+        return SORT_UNFILED_BY_DATE;
     };
 
     this.getClearCache = function () {
