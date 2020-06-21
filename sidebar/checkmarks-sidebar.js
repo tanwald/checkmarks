@@ -329,6 +329,7 @@ function CheckmarksSidebar() {
     let resetState = function () {
         paused = false;
         restored = false;
+        folders = {};
         urls = {};
         tabCount = 0;
         tabRegistry = {};
@@ -518,6 +519,7 @@ function CheckmarksSidebar() {
      */
     let run = function (tree) {
         bookmarksTotal = 0;
+        folders = {};
         // Collect bookmark-information
         walk(tree[0], '/');
 
