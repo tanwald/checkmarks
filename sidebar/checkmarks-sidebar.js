@@ -31,7 +31,7 @@ function CheckmarksSidebar() {
     // Navigation errors:
     const ERROR_SERVER_NOT_FOUND = 'server_not_found';
     const ERROR_CONNECTION_REFUSED = 'connection_refused';
-    const ERROR_INVALID_CERTIFICATE = 'invalid_certificate';
+    const ERROR_INSECURE = 'insecure';
     const ERROR_BINDING_ABORTED = 'redirect'; // Actually a warning. Loading will continue.
     const ERROR_ABORTED = 'aborted';
     const ERROR_INTERRUPT = 'connection_interrupted';
@@ -40,7 +40,7 @@ function CheckmarksSidebar() {
     const ERROR_CODES_TO_TYPE = {
         '2152398878': ERROR_SERVER_NOT_FOUND,
         '2152398861': ERROR_CONNECTION_REFUSED,
-        '2153394164': ERROR_INVALID_CERTIFICATE,
+        '2153394164': ERROR_INSECURE,
         '2152398850': ERROR_BINDING_ABORTED,
         '2147500036': ERROR_ABORTED,
         '2152398919': ERROR_INTERRUPT,
@@ -63,7 +63,7 @@ function CheckmarksSidebar() {
     // Navigation errors:
     ERROR_TYPE_TO_ICON[ERROR_SERVER_NOT_FOUND] = 'dns';
     ERROR_TYPE_TO_ICON[ERROR_CONNECTION_REFUSED] = 'block';
-    ERROR_TYPE_TO_ICON[ERROR_INVALID_CERTIFICATE] = 'no_encryption';
+    ERROR_TYPE_TO_ICON[ERROR_INSECURE] = 'no_encryption';
     ERROR_TYPE_TO_ICON[ERROR_BINDING_ABORTED] = 'directions';
     ERROR_TYPE_TO_ICON[ERROR_ABORTED] = 'report';
     ERROR_TYPE_TO_ICON[ERROR_INTERRUPT] = 'report';
@@ -143,7 +143,7 @@ function CheckmarksSidebar() {
             MODAL.style.display = 'block';
             MODAL_CANCEL.style.display = 'block';
         });
-        CANCEL.addEventListener('mouseenter', () => APOSTROPHE.innerText = 'Cancel/discard run');
+        CANCEL.addEventListener('mouseenter', () => APOSTROPHE.innerText = 'Cancel current or discard paused run');
         CANCEL.addEventListener('mouseleave', () => APOSTROPHE.innerText = '');
 
         // Confirmation button for canceling a run.
@@ -293,17 +293,29 @@ function CheckmarksSidebar() {
     let setFilters = function () {
         const seen = [];
         const filterButtons = [];
-        Object.entries(ERROR_TYPE_TO_ICON).forEach((entry) => {
-            const error = entry[1];
 
-            if (!seen.includes(error)) {
-                seen.push(error);
-                const filterButton = createIcon(error, 'error', '');
+        const apostrophe = document.createTextNode('');
+
+        Object.entries(ERROR_TYPE_TO_ICON).forEach((entry) => {
+            const errorText = entry[0].replace(/_/g, ' ');
+            const errorIcon = entry[1];
+
+            if (!seen.includes(errorIcon)) {
+                seen.push(errorIcon);
+                const filterButton = createIcon(errorIcon, 'error', '');
                 filterButton.classList.add('button');
 
                 filterButton.addEventListener('click', () => {
-                    toggleFilter(filterButton, error);
+                    toggleFilter(filterButton, errorIcon);
                     createList(errors, true);
+                });
+
+                filterButton.addEventListener('mouseenter', () => {
+                    apostrophe.textContent = ` | ${errorText}`;
+                });
+
+                filterButton.addEventListener('mouseleave', () => {
+                    apostrophe.textContent = '';
                 });
 
                 FILTERS.append(filterButton);
@@ -321,6 +333,7 @@ function CheckmarksSidebar() {
             });
         });
         FILTERS.append(toggleButton);
+        FILTERS.append(apostrophe);
     };
 
     /**
@@ -468,7 +481,8 @@ function CheckmarksSidebar() {
 
         Object.keys(tabRegistry).forEach((id) => {
             if (!id.endsWith('Complete')) {
-                browser.tabs.remove(parseInt(id));
+                browser.tabs.remove(parseInt(id))
+                    .then(() => delete tabRegistry[id]);
             }
         });
     };
